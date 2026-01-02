@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { successResponse, errorResponse } from "@/lib/api-utils";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -17,9 +18,7 @@ export async function GET(request: Request) {
   }
 
   if (!host || !email || !apiToken || !boardId) {
-    return NextResponse.json({
-      error: "Jira configuration missing. Check JIRA_HOST, JIRA_EMAIL, JIRA_API_TOKEN, and JIRA_BOARD_IDs in .env",
-    }, { status: 500 });
+    return errorResponse("Jira configuration missing. Check JIRA_HOST, JIRA_EMAIL, JIRA_API_TOKEN, and JIRA_BOARD_IDs in .env", 500);
   }
 
   const auth = Buffer.from(`${email}:${apiToken}`).toString("base64");
@@ -38,17 +37,14 @@ export async function GET(request: Request) {
     if (!sprintRes.ok) {
       const errorBody = await sprintRes.text();
       console.error(`Jira Sprint API Failed (${sprintRes.status}):`, errorBody);
-      return NextResponse.json({ 
-        error: `Jira API error: ${sprintRes.status}`,
-        details: errorBody
-      }, { status: 500 });
+      return errorResponse(`Jira API error: ${sprintRes.status}`, 500, errorBody);
     }
     
     const sprintData = await sprintRes.json();
     const activeSprint = sprintData.values?.[0];
 
     if (!activeSprint) {
-      return NextResponse.json({ 
+      return successResponse({ 
         name: "No Active Sprint", 
         progress: 0, 
         total: 0,
@@ -66,7 +62,7 @@ export async function GET(request: Request) {
     
     if (!issuesRes.ok) {
       console.error(`Jira Issues API Failed: ${issuesRes.status}`);
-      return NextResponse.json({
+      return successResponse({
         name: activeSprint.name,
         goal: activeSprint.goal || "",
         daysLeft: 0,
@@ -91,7 +87,7 @@ export async function GET(request: Request) {
     const diffTime = Math.max(0, endDate.getTime() - today.getTime());
     const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
 
-    return NextResponse.json({
+    return successResponse({
       name: activeSprint.name,
       goal: activeSprint.goal || "",
       daysLeft,
@@ -101,8 +97,7 @@ export async function GET(request: Request) {
       status: "Active"
     });
 
-  } catch (error) {
-    console.error("Jira API Error:", error);
-    return NextResponse.json({ error: "Failed to fetch sprint data" }, { status: 500 });
+  } catch (error: any) {
+    return errorResponse("Failed to fetch sprint data", 500, error);
   }
 }

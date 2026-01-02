@@ -3,41 +3,13 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle, Smartphone, RefreshCw, QrCode, ChevronLeft, ChevronRight, File, GitBranch, GitCommit, Clock } from "lucide-react";
+import { Smartphone, RefreshCw, QrCode, ChevronLeft, ChevronRight, File, GitBranch, GitCommit, Clock } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
-
-interface CodemagicBuild {
-    id: string;
-    appId: string;
-    appName: string;
-    status: string;
-    branch: string;
-    version: string;
-    workflow: string;
-    started_at: string;
-    started_by?: string;
-    created_at?: string;
-    duration: number;
-    artifact?: {
-        name: string;
-        url: string;
-        secureId?: string;
-    };
-    allArtifacts?: {
-        name: string;
-        type: string;
-        url: string;
-        size: number;
-    }[];
-    commit_hash?: string;
-    commit_message?: string;
-    author_name?: string;
-    author_avatar?: string;
-    instance_type?: string;
-}
+import { BuildInfo, BuildsResponse } from "@/types";
+import { UserAvatar, DurationBadge } from "./build-utils";
 
 export function CodemagicBuildList() {
-    const [builds, setBuilds] = useState<CodemagicBuild[]>([]);
+    const [builds, setBuilds] = useState<BuildInfo[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [qrUrls, setQrUrls] = useState<Record<string, string>>({});
@@ -48,7 +20,7 @@ export function CodemagicBuildList() {
         try {
             const res = await fetch(`/api/builds/codemagic?page=${pageNum}&limit=9`);
             if (res.ok) {
-                const json = await res.json();
+                const json: BuildsResponse = await res.json();
                 setBuilds(json.builds || []);
             }
         } catch (error) {
@@ -110,14 +82,14 @@ export function CodemagicBuildList() {
                                  <div className="space-y-1 min-w-0 flex-1">
                                     <CardTitle className="text-base flex items-center gap-2">
                                         <Smartphone className="h-4 w-4 text-foreground shrink-0" />
-                                        <span className="truncate">{build.appName || "Rally App"}</span>
+                                        <span className="truncate">{build.appName}</span>
                                     </CardTitle>
                                     <p className="text-xs text-muted-foreground">{build.workflow}</p>
-                                    {(build.commit_hash || build.commit_message) && (
-                                        <p className="text-xs text-muted-foreground truncate bg-muted/50 px-2 py-1 rounded border border-border/50 font-mono" title={build.commit_message}>
-                                            {build.commit_hash && <span>#{build.commit_hash}</span>}
-                                            {build.commit_hash && build.commit_message && " - "}
-                                            <span className="font-sans">{build.commit_message}</span>
+                                    {(build.commitHash || build.commitMessage) && (
+                                        <p className="text-xs text-muted-foreground truncate bg-muted/50 px-2 py-1 rounded border border-border/50 font-mono" title={build.commitMessage}>
+                                            {build.commitHash && <span>#{build.commitHash}</span>}
+                                            {build.commitHash && build.commitMessage && " - "}
+                                            <span className="font-sans">{build.commitMessage}</span>
                                         </p>
                                     )}
                                  </div>
@@ -144,18 +116,12 @@ export function CodemagicBuildList() {
                                     <p className="text-xs text-muted-foreground mb-1">Triggered By</p>
                                     <div className="flex flex-col gap-1">
                                         <div className="flex items-center gap-1.5">
-                                            {build.author_avatar ? (
-                                                <img src={build.author_avatar} alt={build.author_name} className="h-5 w-5 rounded-full border border-border" />
-                                            ) : (
-                                                <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold">
-                                                    {build.author_name?.charAt(0) || "?"}
-                                                </div>
-                                            )}
-                                            <p className="font-medium truncate text-xs">{build.author_name || "System"}</p>
+                                            <UserAvatar name={build.author} avatarUrl={build.authorAvatar} />
+                                            <p className="font-medium truncate text-xs">{build.author || "System"}</p>
                                         </div>
-                                        {build.started_by && (
+                                        {build.startedBy && (
                                             <span className="text-[10px] text-muted-foreground px-1.5 py-0.5 bg-muted rounded w-fit">
-                                                {build.started_by}
+                                                {build.startedBy}
                                             </span>
                                         )}
                                     </div>
@@ -163,27 +129,27 @@ export function CodemagicBuildList() {
                                 <div>
                                     <p className="text-xs text-muted-foreground mb-1">Machine</p>
                                     <p className="font-medium truncate text-xs capitalize bg-muted/40 px-2 py-0.5 rounded border border-border/50 inline-block">
-                                        {build.instance_type || "Standard"}
+                                        {build.instanceType || "Standard"}
                                     </p>
                                 </div>
                                 <div>
                                     <p className="text-xs text-muted-foreground mb-1">Duration</p>
                                     <div className="flex items-center gap-1.5">
                                         <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
-                                        <p className="font-medium">{build.duration ? `${Math.round(build.duration / 60)}m` : "-"}</p>
+                                        <p className="font-medium"><DurationBadge duration={build.duration} /></p>
                                     </div>
                                 </div>
                                 <div>
                                     <p className="text-xs text-muted-foreground mb-1">Started</p>
-                                    <p className="font-medium text-xs">{new Date(build.started_at).toLocaleString()}</p>
+                                    <p className="font-medium text-xs">{build.startedAt ? new Date(build.startedAt).toLocaleString() : "-"}</p>
                                 </div>
                             </div>
 
                             <div className="mt-6 pt-4 border-t border-border">
                                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Artifacts</p>
-                                {build.allArtifacts && build.allArtifacts.length > 0 ? (
+                                {build.artifacts && build.artifacts.length > 0 ? (
                                     <div className="flex flex-col gap-2">
-                                        {build.allArtifacts.map((artifact, i) => {
+                                        {build.artifacts.map((artifact, i) => {
                                             const isApp = artifact.type === 'apk' || artifact.type === 'ipa' || artifact.name.endsWith('.apk') || artifact.name.endsWith('.ipa');
                                             const key = artifact.url;
                                             return (
@@ -236,7 +202,6 @@ export function CodemagicBuildList() {
                                 )}
                             </div>
                             
-
                         </CardContent>
                     </Card>
                 ))}

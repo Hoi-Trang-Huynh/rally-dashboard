@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { successResponse, errorResponse } from "@/lib/api-utils";
 
 export async function GET() {
   const host = process.env.JIRA_HOST;
@@ -7,7 +8,7 @@ export async function GET() {
   const projectKey = process.env.JIRA_PROJECT_KEY || "RAL";
 
   if (!host || !email || !apiToken) {
-    return NextResponse.json({
+    return successResponse({
       releases: [],
       error: "Jira API not configured",
     });
@@ -73,10 +74,9 @@ export async function GET() {
       })
       .slice(0, 10); // Limit to 10
 
-    return NextResponse.json({ releases });
-  } catch (error) {
-    console.error("Jira Releases API error:", error);
-    return NextResponse.json({
+    return successResponse({ releases });
+  } catch (error: any) {
+    return successResponse({
       releases: [],
       error: "Failed to fetch releases",
     });

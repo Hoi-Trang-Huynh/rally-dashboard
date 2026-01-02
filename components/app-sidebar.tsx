@@ -8,7 +8,7 @@ import {
   CheckSquare,
   CalendarDays,
   LogOut,
-  User,
+  User as UserIcon,
   Search,
   Settings,
   Briefcase,
@@ -29,12 +29,10 @@ import {
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+import { User } from "@/types";
+
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  user?: {
-    name?: string | null;
-    email?: string | null;
-    image?: string | null;
-  };
+  user?: User;
 }
 
 export function AppSidebar({ user, ...props }: AppSidebarProps) {
@@ -178,7 +176,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
             ) : (
              <SidebarMenuButton asChild className="h-12 bg-primary text-primary-foreground hover:bg-primary/90 justify-center shadow-md">
                 <Link href="/api/auth/signin">
-                  <User className="mr-2 h-5 w-5" />
+                  <UserIcon className="mr-2 h-5 w-5" />
                   <span className="font-semibold">Sign In</span>
                 </Link>
              </SidebarMenuButton>

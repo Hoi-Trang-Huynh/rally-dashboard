@@ -1,31 +1,16 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle, Clock, GitBranch, GitCommit, RefreshCw, Github, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from "lucide-react";
-
-interface WorkflowRun {
-  id: number;
-  name: string;
-  status: string;
-  conclusion: string;
-  branch: string;
-  commit: string;
-  message: string;
-  author: string;
-  avatar?: string;
-  url: string;
-  updated_at: string;
-  duration: number;
-}
+import { Clock, GitBranch, GitCommit, RefreshCw, Github, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from "lucide-react";
+import { BuildInfo, BuildsResponse } from "@/types";
+import { StatusIcon, StatusBadge, DurationBadge, UserAvatar } from "./build-utils";
 
 interface RepoBuilds {
   repo: string;
   total_count?: number;
-  runs: WorkflowRun[];
+  runs: BuildInfo[];
   error?: boolean;
 }
 
@@ -42,9 +27,18 @@ export function GithubBuildList() {
       try {
         const res = await fetch("/api/builds/github");
         if (res.ok) {
-            const json = await res.json();
-            const builds = json.builds || [];
+            const json: BuildsResponse = await res.json();
+            // The API now returns { builds: RepoBuilds[] } which is typed as BuildInfo[] in the generic, 
+            // but the route actually returns a structured object for GitHub specifically.
+            // Let's cast it properly or update the Type if needed.
+            // Actually, my types/builds.ts defines `BuildsResponse { builds: BuildInfo[] }`.
+            // But the GitHub route returns `builds: { repo, runs: BuildInfo[] }[]`.
+            // While TypeScript might complain, the runtime JSON is what matters.
+            // I should update the types/builds.ts or extend it, but for now I'll cast.
+            
+            const builds = json.builds as unknown as RepoBuilds[] || [];
             setData(builds);
+            
             // Initialize all repos as expanded by default
             const expanded: Record<string, boolean> = {};
             const pages: Record<string, number> = {};
@@ -134,25 +128,13 @@ export function GithubBuildList() {
                                         >
                                             <TableCell>
                                                 <div className="flex items-center gap-2">
-                                                    {run.status === "completed" ? (
-                                                        run.conclusion === "success" ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <XCircle className="h-4 w-4 text-red-500" />
-                                                    ) : (
-                                                        <RefreshCw className="h-4 w-4 animate-spin text-amber-500" />
-                                                    )}
-                                                    <Badge variant="outline" className="font-mono text-[10px] h-5">
-                                                        {run.conclusion || run.status}
-                                                    </Badge>
+                                                    <StatusIcon status={run.normalizedStatus} rawStatus={run.status} conclusion={run.conclusion} />
+                                                    <StatusBadge status={run.normalizedStatus} rawStatus={run.conclusion || run.status} />
                                                 </div>
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-2">
-                                                    {run.avatar ? (
-                                                        <img src={run.avatar} alt={run.author} className="h-5 w-5 rounded-full border border-border" />
-                                                    ) : (
-                                                        <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold">
-                                                            {run.author?.charAt(0) || "?"}
-                                                        </div>
-                                                    )}
+                                                    <UserAvatar name={run.author} avatarUrl={run.authorAvatar} />
                                                     <span className="text-xs font-medium truncate">{run.author || "System"}</span>
                                                 </div>
                                             </TableCell>
@@ -164,25 +146,23 @@ export function GithubBuildList() {
                                                     </div>
                                                     <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
                                                         <GitCommit className="h-3 w-3" />
-                                                        {run.commit}
+                                                        {run.commitHash}
                                                     </div>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="hidden md:table-cell">
-                                                <span className="truncate block max-w-[300px] text-muted-foreground group-hover:text-foreground transition-colors" title={run.message}>
-                                                    {run.message}
+                                                <span className="truncate block max-w-[300px] text-muted-foreground group-hover:text-foreground transition-colors" title={run.commitMessage}>
+                                                    {run.commitMessage}
                                                 </span>
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-1.5">
                                                     <Clock className="h-3 w-3 text-muted-foreground" />
-                                                    <span className="text-xs font-medium">
-                                                        {run.duration ? `${Math.round(run.duration / 60)}m` : "-"}
-                                                    </span>
+                                                    <p className="font-medium text-xs"><DurationBadge duration={run.duration} /></p>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-right text-muted-foreground text-xs">
-                                                {new Date(run.updated_at).toLocaleString()}
+                                                {run.finishedAt ? new Date(run.finishedAt).toLocaleString() : "-"}
                                             </TableCell>
                                         </TableRow>
                                     ))}

@@ -1,5 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import { connectToDatabase, CalendarEvent } from "@/lib/mongodb";
+import { NextRequest } from "next/server";
+import { connectToDatabase } from "@/lib/mongodb";
+import { CalendarEvent } from "@/types";
+import { successResponse, errorResponse } from "@/lib/api-utils";
 import { ObjectId } from "mongodb";
 
 // GET: Fetch events with optional date range filtering
@@ -42,13 +44,9 @@ export async function GET(request: NextRequest) {
       _id: event._id?.toString(),
     }));
 
-    return NextResponse.json({ events: serializedEvents }, { status: 200 });
-  } catch (error) {
-    console.error("Error fetching events:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch events" },
-      { status: 500 }
-    );
+    return successResponse({ events: serializedEvents });
+  } catch (error: any) {
+    return errorResponse("Failed to fetch events", 500, error);
   }
 }
 
@@ -62,10 +60,7 @@ export async function POST(request: NextRequest) {
     
     // Validate required fields
     if (!body.title || !body.type || !body.startDate || !body.endDate) {
-      return NextResponse.json(
-        { error: "Missing required fields: title, type, startDate, endDate" },
-        { status: 400 }
-      );
+      return errorResponse("Missing required fields: title, type, startDate, endDate", 400);
     }
 
     const newEvent: CalendarEvent = {
@@ -86,18 +81,14 @@ export async function POST(request: NextRequest) {
 
     const result = await collection.insertOne(newEvent as any);
 
-    return NextResponse.json(
+    return successResponse(
       { 
         message: "Event created successfully",
         eventId: result.insertedId.toString(),
       },
-      { status: 201 }
+      201
     );
-  } catch (error) {
-    console.error("Error creating event:", error);
-    return NextResponse.json(
-      { error: "Failed to create event" },
-      { status: 500 }
-    );
+  } catch (error: any) {
+    return errorResponse("Failed to create event", 500, error);
   }
 }

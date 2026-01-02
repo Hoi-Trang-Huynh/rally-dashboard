@@ -33,23 +33,6 @@ export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db
 }
 
 // Types for Calendar Events
-export interface CalendarEvent {
-  _id?: string;
-  title: string;
-  type: "time-off" | "team-event" | "meeting" | "holiday";
-  startDate: string; // ISO date string
-  endDate: string;   // ISO date string
-  allDay: boolean;
-  participants?: {
-    userId: string;
-    name: string;
-    email: string;
-  }[];
-  // Deprecated single user fields (kept for backward compatibility if needed, or remove if clean slate)
-  userId?: string;
-  userEmail?: string;
-  userName?: string;
-  description?: string;
-  createdBy: string;
-  createdAt: string;
-}
+import { CalendarEvent } from "@/types";
+export type { CalendarEvent };
+
