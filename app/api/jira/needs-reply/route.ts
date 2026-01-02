@@ -1,32 +1,61 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 
 export async function GET() {
+  const session = await auth();
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const userEmail = session.user.email;
+
   const host = process.env.JIRA_HOST;
-  const email = process.env.JIRA_EMAIL;
+  const sysEmail = process.env.JIRA_EMAIL;
   const apiToken = process.env.JIRA_API_TOKEN;
   const projectKey = process.env.JIRA_PROJECT_KEY || "RAL";
 
-  if (!host || !email || !apiToken) {
+  if (!host || !sysEmail || !apiToken) {
     return NextResponse.json({
       issues: [],
       error: "Jira API not configured. Add JIRA_HOST, JIRA_EMAIL, and JIRA_API_TOKEN to .env",
     });
   }
 
-  const auth = Buffer.from(`${email}:${apiToken}`).toString("base64");
+  const authHeader = `Basic ${Buffer.from(`${sysEmail}:${apiToken}`).toString("base64")}`;
   const headers = {
-    Authorization: `Basic ${auth}`,
+    Authorization: authHeader,
     Accept: "application/json",
   };
+
+  // Resolve user's Jira Account ID
+  let accountId: string | null = null;
+  try {
+    const userRes = await fetch(`https://${host}/rest/api/3/user/search?query=${encodeURIComponent(userEmail)}`, {
+        headers,
+        cache: "force-cache",
+        next: { revalidate: 3600 }
+    });
+
+    if (userRes.ok) {
+        const users = await userRes.json();
+        if (users && users.length > 0) {
+            accountId = users[0].accountId;
+        }
+    }
+  } catch (lookupError) {
+      console.warn("User lookup failed", lookupError);
+  }
+
+  if (!accountId) {
+      // If we can't identify the user in Jira, return empty list
+      return NextResponse.json({ issues: [] });
+  }
 
   const items: any[] = [];
 
   try {
     // 1. Fetch Jira Issues
     // Query: Tickets in project where (Assignee = Me OR Comment mentions Me)
-    // 1. Fetch Jira Issues
-    // Query: Tickets in project where (Assignee = Me OR Comment mentions Me)
-    const jql = `project = ${projectKey} AND (assignee = currentUser() OR comment ~ currentUser()) ORDER BY updated DESC`;
+    const jql = `project = ${projectKey} AND (assignee = "${accountId}" OR comment ~ "${accountId}") ORDER BY updated DESC`;
 
     // Request renderedFields to get HTML format for comments
     const jiraResponse = await fetch(
@@ -57,7 +86,8 @@ export async function GET() {
           
           const lastComment = comments[comments.length - 1];
           // Needs reply if last comment author is NOT me
-          return lastComment?.author?.emailAddress !== email;
+          // Using accountId comparison which is reliable
+          return lastComment?.author?.accountId !== accountId;
         })
         .map((issue: any) => {
           const fields = issue.fields;
@@ -99,7 +129,8 @@ export async function GET() {
 
     // 2. Fetch Confluence Pages (Best Effort)
     try {
-        const cql = encodeURIComponent(`(creator = currentUser() OR text ~ currentUser()) AND type = page order by lastModified desc`);
+        // Query: Pages created by Me OR text mentions Me
+        const cql = encodeURIComponent(`(creator = "${accountId}" OR text ~ "${accountId}") AND type = page order by lastModified desc`);
         
         const wikiResponse = await fetch(
             `https://${host}/wiki/rest/api/content/search?cql=${cql}&limit=5&expand=children.comment.history,children.comment.body.view,history.lastUpdated,version`,
@@ -120,7 +151,8 @@ export async function GET() {
                     
                     const author = lastComment?.history?.createdBy;
                     
-                    const isMe = author?.email === email || (author?.type === 'knownUser' && author?.accountId === process.env.JIRA_ACCOUNT_ID); 
+                    // Check if last comment is by Me (using Account ID)
+                    const isMe = author?.accountId === accountId;
                     if (isMe) return false;
                     
                      return author?.displayName !== "Oauth" && author?.displayName !== "System";
