@@ -106,7 +106,7 @@ export function CodemagicBuildList() {
                             <div className="flex justify-between items-start">
                                  <div className="space-y-1">
                                     <CardTitle className="text-base flex items-center gap-2">
-                                        <Smartphone className="h-4 w-4 text-purple-500" />
+                                        <Smartphone className="h-4 w-4 text-foreground" />
                                         {build.appName || "Rally App"}
                                     </CardTitle>
                                     <p className="text-xs text-muted-foreground">{build.workflow}</p>
@@ -179,9 +179,9 @@ export function CodemagicBuildList() {
                                                         <div className="flex items-center gap-2 overflow-hidden">
                                                             <div className="p-1.5 bg-background rounded-md border border-border shadow-sm shrink-0">
                                                                 {isApp ? (
-                                                                    <Smartphone className={`h-3.5 w-3.5 ${artifact.name.endsWith('.ipa') ? 'text-blue-500' : 'text-green-500'}`} />
+                                                                    <Smartphone className="h-3.5 w-3.5 text-foreground" />
                                                                 ) : (
-                                                                    <File className="h-3.5 w-3.5 text-muted-foreground" />
+                                                                    <File className="h-3.5 w-3.5 text-foreground" />
                                                                 )}
                                                             </div>
                                                             <a href={artifact.url} target="_blank" className="text-xs font-medium hover:underline truncate" title={artifact.name}>

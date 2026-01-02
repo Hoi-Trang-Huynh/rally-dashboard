@@ -2,6 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 
 const CODEMAGIC_TOKEN = process.env.CODEMAGIC_TOKEN;
 
+// Calculate duration in seconds from start and finish timestamps
+function calculateDuration(startedAt?: string, finishedAt?: string): number | null {
+  if (!startedAt || !finishedAt) return null;
+  
+  const start = new Date(startedAt).getTime();
+  const end = new Date(finishedAt).getTime();
+  
+  if (isNaN(start) || isNaN(end) || end < start) return null;
+  
+  return Math.round((end - start) / 1000); // Return seconds
+}
+
 export async function GET(request: NextRequest) {
   if (!CODEMAGIC_TOKEN) {
     return NextResponse.json({ error: "CODEMAGIC_TOKEN is not defined" }, { status: 500 });
@@ -93,7 +105,7 @@ export async function GET(request: NextRequest) {
             workflow: build.workflowId || "default",
             started_at: build.startedAt || build.started_at,
             finished_at: build.finishedAt || build.finished_at,
-            duration: build.duration,
+            duration: build.duration || calculateDuration(build.startedAt || build.started_at, build.finishedAt || build.finished_at),
             commit_hash: build.commit?.hash?.substring(0, 7) || build.commit?.hash, // Short hash
             author_name: build.commit?.authorName,
             author_avatar: build.commit?.authorAvatarUrl,

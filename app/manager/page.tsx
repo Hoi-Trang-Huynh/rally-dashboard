@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
-  ShieldAlert, 
+  Briefcase, 
   AlertTriangle, 
   FileText,
   Bug,
@@ -15,7 +15,8 @@ import {
   Search, // Research
   PenTool, // Refinement
   HelpCircle, // Default
-  Banknote
+  Banknote,
+  ShieldAlert
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -96,7 +97,7 @@ export default function ManagerPage() {
       <div className="flex items-center justify-between shrink-0 border-b border-border/50 pb-6">
         <div className="flex items-center gap-4">
             <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-pink-500 to-orange-500 flex items-center justify-center text-white shadow-lg shadow-pink-500/20">
-                <ShieldAlert className="h-7 w-7" />
+                <Briefcase className="h-7 w-7" />
             </div>
             <div>
                 <h1 className="text-3xl font-bold tracking-tight">Manager</h1>
