@@ -11,7 +11,7 @@ import {
   User,
   Search,
   Settings,
-  ShieldAlert,
+  Briefcase,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
@@ -139,13 +139,13 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
           <SidebarMenuItem>
             <SidebarMenuButton 
               asChild 
-              tooltip="Admin" 
-              isActive={pathname === "/admin"}
+              tooltip="Manager" 
+              isActive={pathname === "/manager"}
               className={menuItemClass}
             >
-              <Link href="/admin">
-                <ShieldAlert className="h-6 w-6" />
-                <span>Admin</span>
+              <Link href="/manager">
+                <Briefcase className="h-6 w-6" />
+                <span>Manager</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

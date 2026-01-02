@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 
-// Allowed emails for admin access
+// Allowed emails for manager access
 const ALLOWED_EMAILS = [
   "thanh.ha@rally-go.com", 
   "tuan.bui@rally-go.com", 
@@ -25,7 +25,7 @@ export async function GET(req: Request) {
   const projectKey = process.env.JIRA_PROJECT_KEY || "RAL";
 
   if (!host || !email || !apiToken) {
-    console.error("Admin Route - Misconfigured Env");
+    console.error("Manager Route - Misconfigured Env");
     return NextResponse.json({ error: "Misconfigured Jira Env" }, { status: 500 });
   }
 
@@ -39,7 +39,7 @@ export async function GET(req: Request) {
     // 1. Fetch Field IDs dynamically
     const fieldsResponse = await fetch(`https://${host}/rest/api/3/field`, { headers, cache: "force-cache" }); 
     if (!fieldsResponse.ok) {
-        console.error("Admin Route - Failed to fetch fields:", fieldsResponse.status, fieldsResponse.statusText);
+        console.error("Manager Route - Failed to fetch fields:", fieldsResponse.status, fieldsResponse.statusText);
         throw new Error("Failed to fetch fields");
     }
     
@@ -71,7 +71,7 @@ export async function GET(req: Request) {
     
     jql += `) AND statusCategory != Done ORDER BY updated DESC`;
 
-    console.log("Admin Route - Generated JQL:", jql);
+    console.log("Manager Route - Generated JQL:", jql);
 
     // 2. Fetch Issues
     const issuesResponse = await fetch(
@@ -93,8 +93,8 @@ export async function GET(req: Request) {
     
     if (!issuesResponse.ok) {
         const errorBody = await issuesResponse.text();
-        console.error("Admin Route - Failed to fetch issues. Status:", issuesResponse.status);
-        console.error("Admin Route - Jira Error Body:", errorBody);
+        console.error("Manager Route - Failed to fetch issues. Status:", issuesResponse.status);
+        console.error("Manager Route - Jira Error Body:", errorBody);
         throw new Error(`Failed to fetch issues: ${errorBody}`);
     }
     const issuesData = await issuesResponse.json();
@@ -117,15 +117,15 @@ export async function GET(req: Request) {
     const cql = encodeURIComponent(`space = "${projectKey}" AND type = "page" order by lastModified desc`);
     const cqlUrl = `https://${host}/wiki/rest/api/content/search?cql=${cql}&limit=50&expand=history.lastUpdated,metadata.labels`;
     
-    console.log("Admin Route - Fetching Pages with CQL:", decodeURIComponent(cql));
-    console.log("Admin Route - Confluence URL:", cqlUrl);
+    console.log("Manager Route - Fetching Pages with CQL:", decodeURIComponent(cql));
+    console.log("Manager Route - Confluence URL:", cqlUrl);
 
     const pagesResponse = await fetch(
         cqlUrl,
         { headers, cache: "no-store" }
     );
     
-    console.log("Admin Route - Pages Response Status:", pagesResponse.status);
+    console.log("Manager Route - Pages Response Status:", pagesResponse.status);
 
     const pages = [];
     if (pagesResponse.ok) {
@@ -145,13 +145,13 @@ export async function GET(req: Request) {
         pages.push(...mappedPages);
     } else {
          const errorBody = await pagesResponse.text();
-         console.error("Admin Route - Pages Error Body:", errorBody);
+         console.error("Manager Route - Pages Error Body:", errorBody);
     }
 
     return NextResponse.json({ tickets, pages });
 
   } catch (error: any) {
-    console.error("Admin API Error:", error);
+    console.error("Manager API Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

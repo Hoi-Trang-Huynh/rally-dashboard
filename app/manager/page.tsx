@@ -46,7 +46,7 @@ const statusColors: Record<string, string> = {
   "Done": "bg-green-500/10 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800",
 };
 
-export default function AdminPage() {
+export default function ManagerPage() {
   const [activeTab, setActiveTab] = useState("grooming");
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [pages, setPages] = useState<Page[]>([]);
@@ -56,7 +56,7 @@ export default function AdminPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch("/api/admin/grooming");
+        const res = await fetch("/api/manager/grooming");
         if (res.status === 401) {
             setError("Access Denied: You do not have permission to view this page.");
             setIsLoading(false);
@@ -85,7 +85,7 @@ export default function AdminPage() {
     return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
             <ShieldAlert className="h-16 w-16 text-red-500" />
-            <h1 className="text-2xl font-bold text-foreground">Admin Access Restricted</h1>
+            <h1 className="text-2xl font-bold text-foreground">Manager Access Restricted</h1>
             <p className="text-muted-foreground">{error}</p>
         </div>
     );
@@ -99,7 +99,7 @@ export default function AdminPage() {
                 <ShieldAlert className="h-7 w-7" />
             </div>
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">Admin</h1>
+                <h1 className="text-3xl font-bold tracking-tight">Manager</h1>
                 <p className="text-lg text-muted-foreground">Manage project grooming, budget, and settings</p>
             </div>
         </div>
