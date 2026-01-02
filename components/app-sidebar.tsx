@@ -49,14 +49,14 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              className="group-data-[collapsible=icon]:!p-2 hover:bg-transparent"
+              className="group-data-[collapsible=icon]:!p-0 group-data-[collapsible=icon]:!justify-center hover:bg-transparent"
             >
-              <div className="flex items-center gap-3">
-                <div className="flex aspect-square size-10 group-data-[collapsible=icon]:size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground transition-all">
+              <div className="flex items-center gap-3 group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:justify-center">
+                <div className="flex aspect-square size-10 group-data-[collapsible=icon]:size-8 items-center justify-center rounded-lg overflow-hidden transition-all flex-shrink-0">
                   <img 
                     src="/rally_logo_light_inverse.png" 
                     alt="Rally Logo" 
-                    className="size-full object-cover rounded-lg"
+                    className="w-full h-full object-contain"
                   />
                 </div>
                 <div className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
@@ -156,9 +156,9 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             {user ? (
-              <div className="flex items-center gap-2 h-14 px-2 rounded-lg hover:bg-accent transition-colors">
-                <Avatar className="h-10 w-10 rounded-xl border-2 border-background shadow-sm">
-                  <AvatarImage src={user.image || undefined} alt={user.name || ""} />
+              <div className="flex items-center gap-2 h-14 px-2 rounded-lg hover:bg-accent transition-colors group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:h-10">
+                <Avatar className="h-10 w-10 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 rounded-xl border-2 border-background shadow-sm flex-shrink-0 transition-all">
+                  <AvatarImage src={user.image || undefined} alt={user.name || ""} className="object-cover" />
                   <AvatarFallback className="rounded-xl bg-gradient-to-br from-pink-500 to-orange-500 text-white font-bold">
                      {user.name?.charAt(0) || "U"}
                   </AvatarFallback>
