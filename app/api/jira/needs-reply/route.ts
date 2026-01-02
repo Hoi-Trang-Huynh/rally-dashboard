@@ -54,8 +54,8 @@ export async function GET() {
 
   try {
     // 1. Fetch Jira Issues
-    // Query: Tickets in project where (Assignee = Me OR Comment mentions Me)
-    const jql = `project = ${projectKey} AND (assignee = "${accountId}" OR comment ~ "${accountId}") ORDER BY updated DESC`;
+    // Query: Tickets in project where (Assignee = Me OR Reporter = Me OR Comment mentions Me)
+    const jql = `project = ${projectKey} AND (assignee = "${accountId}" OR reporter = "${accountId}" OR comment ~ "${accountId}") ORDER BY updated DESC`;
 
     // Request renderedFields to get HTML format for comments
     const jiraResponse = await fetch(
@@ -70,7 +70,7 @@ export async function GET() {
             jql,
             maxResults: 10,
             fields: ["key", "summary", "status", "priority", "comment", "updated"],
-            expand: ["renderedFields"]
+            expand: "renderedFields"
         }),
         cache: "no-store", 
       }
@@ -79,113 +79,104 @@ export async function GET() {
     if (jiraResponse.ok) {
       const data = await jiraResponse.json();
       
-      const jiraItems = data.issues
-        ?.filter((issue: any) => {
-          const comments = issue.fields?.comment?.comments;
-          if (!comments || comments.length === 0) return false;
+      // Flatten all comments from all issues, filtering out user's own comments
+      data.issues?.forEach((issue: any) => {
+        const fields = issue.fields;
+        const renderedFields = issue.renderedFields;
+        const issueComments = fields?.comment?.comments || [];
+        const renderedComments = renderedFields?.comment?.comments || [];
+        
+        // Filter comments NOT by me
+        issueComments.forEach((comment: any, index: number) => {
+          if (comment.author?.accountId === accountId) return; // Skip my own comments
           
-          const lastComment = comments[comments.length - 1];
-          // Needs reply if last comment author is NOT me
-          // Using accountId comparison which is reliable
-          return lastComment?.author?.accountId !== accountId;
-        })
-        .map((issue: any) => {
-          const fields = issue.fields;
-          const renderedFields = issue.renderedFields;
-          const issueComments = fields?.comment?.comments || [];
-          
-          // Use rendered (HTML) comment for body text
-          const renderedComments = renderedFields?.comment?.comments || [];
-          const lastRenderedComment = renderedComments[renderedComments.length - 1];
-          const lastComment = issueComments[issueComments.length - 1];
-          
-          const rawBody = lastRenderedComment?.body || "";
+          const renderedComment = renderedComments[index];
+          const rawBody = renderedComment?.body || "";
           const cleanBody = decodeHtmlEntities(rawBody.replace(/<[^>]*>?/gm, "")).trim();
-
-          return {
-            id: issue.id,
+          
+          const commenter = comment.author;
+          const avatarUrl = commenter?.avatarUrls?.["48x48"] || commenter?.avatarUrls?.["32x32"] || commenter?.avatarUrls?.["24x24"];
+          
+          items.push({
+            id: `${issue.id}-${comment.id}`, // Unique ID for each comment
             key: issue.key,
             summary: fields.summary,
             status: fields.status?.name,
             priority: fields.priority?.name || "Medium",
-            updated: fields.updated,
-            // Link to specific comment
-            url: `https://${host}/browse/${issue.key}?focusedCommentId=${lastComment?.id}#comment-${lastComment?.id}`,
+            updated: comment.created, // Use comment creation time for sorting
+            url: `https://${host}/browse/${issue.key}?focusedCommentId=${comment.id}#comment-${comment.id}`,
             source: 'jira',
-            lastComment: lastComment
-              ? {
-                  author: lastComment.author?.displayName,
-                  body: cleanBody || "Content not available",
-                  created: lastComment.created,
-                }
-              : undefined,
-          };
-        }) || [];
-        
-      items.push(...jiraItems);
+            assignee: {
+                displayName: commenter?.displayName || "Unknown",
+                avatarUrl: avatarUrl
+            },
+            lastComment: {
+              author: commenter?.displayName,
+              body: cleanBody || "Content not available",
+              created: comment.created,
+            },
+          });
+        });
+      });
     } else {
+       const errorText = await jiraResponse.text();
        console.error(`Jira API Error: ${jiraResponse.status} ${jiraResponse.statusText}`);
+       console.error(`Error Details:`, errorText);
     }
 
     // 2. Fetch Confluence Pages (Best Effort)
     try {
-        // Query: Pages created by Me OR text mentions Me
         const cql = encodeURIComponent(`(creator = "${accountId}" OR text ~ "${accountId}") AND type = page order by lastModified desc`);
         
         const wikiResponse = await fetch(
-            `https://${host}/wiki/rest/api/content/search?cql=${cql}&limit=5&expand=children.comment.history,children.comment.body.view,history.lastUpdated,version`,
+            `https://${host}/wiki/rest/api/content/search?cql=${cql}&limit=5&expand=children.comment.history.createdBy,children.comment.body.view,history.lastUpdated,version`,
             { headers, cache: "no-store" }
         );
 
         if (wikiResponse.ok) {
             const data = await wikiResponse.json();
-            const wikiItems = data.results
-                ?.filter((page: any) => {
-                    const comments = page.children?.comment?.results;
-                    if (!comments || comments.length === 0) return false;
+            
+            // Flatten all comments from all pages, filtering out user's own comments
+            data.results?.forEach((page: any) => {
+                const comments = page.children?.comment?.results || [];
+                
+                comments.forEach((comment: any) => {
+                    const author = comment.history?.createdBy;
                     
-                    const sortedComments = comments.sort((a: any, b: any) => 
-                        new Date(a.history?.createdDate).getTime() - new Date(b.history?.createdDate).getTime()
-                    );
-                    const lastComment = sortedComments[sortedComments.length - 1];
+                    // Skip my own comments and system comments
+                    if (author?.accountId === accountId) return;
+                    if (author?.displayName === "Oauth" || author?.displayName === "System") return;
                     
-                    const author = lastComment?.history?.createdBy;
-                    
-                    // Check if last comment is by Me (using Account ID)
-                    const isMe = author?.accountId === accountId;
-                    if (isMe) return false;
-                    
-                     return author?.displayName !== "Oauth" && author?.displayName !== "System";
-                })
-                .map((page: any) => {
-                    const comments = page.children?.comment?.results;
-                     const sortedComments = comments.sort((a: any, b: any) => 
-                        new Date(a.history?.createdDate).getTime() - new Date(b.history?.createdDate).getTime()
-                    );
-                    const lastComment = sortedComments[sortedComments.length - 1];
-                    
-                    const htmlBody = lastComment.body?.view?.value || "";
+                    const htmlBody = comment.body?.view?.value || "";
                     const textBody = htmlBody.replace(/<[^>]*>?/gm, '').trim(); 
                     const cleanBody = decodeHtmlEntities(textBody);
-
-                    return {
-                        id: page.id,
-                        key: "WIKI", 
+                    
+                    let avatarUrl = author?.profilePicture?.path;
+                    if (avatarUrl && !avatarUrl.startsWith("http")) {
+                        avatarUrl = `https://${host}${avatarUrl}`;
+                    }
+                    
+                    items.push({
+                        id: `confluference-${page.id}-${comment.id}`,
+                        key: "PAGE", 
                         summary: page.title,
                         status: page.status,
                         priority: "Medium", 
-                        updated: page.history?.lastUpdated?.when || page.version?.when,
-                        // Deep link to comment in Confluence
-                        url: `https://${host}/wiki${page._links.webui}?focusedCommentId=${lastComment.id}#comment-${lastComment.id}`,
+                        updated: comment.history?.createdDate,
+                        url: `https://${host}/wiki${page._links.webui}?focusedCommentId=${comment.id}#comment-${comment.id}`,
                         source: 'confluence',
+                        assignee: {
+                            displayName: author?.displayName || "Unknown User",
+                            avatarUrl: avatarUrl
+                        },
                         lastComment: {
-                           author: lastComment.history?.createdBy?.displayName || "Unknown User",
+                           author: author?.displayName || "Unknown User",
                            body: cleanBody || "Content not available", 
-                           created: lastComment.history?.createdDate,
+                           created: comment.history?.createdDate,
                         }
-                    };
-                }) || [];
-            items.push(...wikiItems);
+                    });
+                });
+            });
         }
     } catch (wikiError) {
         console.warn("Confluence API not available or failed", wikiError);

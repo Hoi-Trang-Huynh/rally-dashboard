@@ -26,7 +26,10 @@ interface Ticket {
   summary: string;
   status: string;
   type: string;
-  assignee: string;
+  assignee: {
+    displayName: string;
+    avatarUrl?: string | null;
+  };
   url: string;
   updated: string;
 }
@@ -34,18 +37,17 @@ interface Ticket {
 interface Page {
   id: string;
   title: string;
+  parent?: string | null;
   url: string;
   updated: string;
-  author: string;
+  author: {
+    displayName: string;
+    avatarUrl?: string | null;
+  };
 }
 
-const statusColors: Record<string, string> = {
-  "To Do": "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800",
-  "In Progress": "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800",
-  "Blocked": "bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800",
-  "Review": "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800",
-  "Done": "bg-green-500/10 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800",
-};
+// Uniform neutral style for all badges
+const badgeStyle = "bg-muted text-muted-foreground border-border";
 
 export default function ManagerPage() {
   const [activeTab, setActiveTab] = useState("grooming");
@@ -128,14 +130,22 @@ export default function ManagerPage() {
             {/* Ungroomed Tickets */}
             <Card className="flex flex-col overflow-hidden h-full border-border bg-card">
               <CardHeader className="bg-muted/30 border-b border-border shrink-0 py-4 px-6">
-                <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                        <AlertTriangle className="h-5 w-5 text-amber-500" />
-                        Ungroomed Tickets
-                    </CardTitle>
-                    <Badge variant="secondary" className="font-mono">{tickets.length}</Badge>
+                <div className="flex items-center gap-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border/50 shadow-sm bg-muted text-foreground">
+                        <AlertTriangle className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                            <CardTitle className="text-base font-semibold text-foreground">Ungroomed Tickets</CardTitle>
+                            {tickets.length > 0 && (
+                                <span className="bg-foreground text-background text-xs font-bold px-2 py-0.5 rounded-full">
+                                    {tickets.length}
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">Missing Desc, AC, Labels, SP, Developer, or Due Date</p>
+                    </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">Missing Desc, AC, Labels, SP, Developer, or Due Date</p>
               </CardHeader>
               <CardContent className="p-0 flex-1 min-h-0">
                  {isLoading ? (
@@ -158,9 +168,9 @@ export default function ManagerPage() {
                                 {tickets.map((ticket: Ticket) => (
                                     <TableRow key={ticket.id} className="border-border/50 hover:bg-muted/40 transition-colors">
                                         <TableCell className="pl-6 py-3 overflow-hidden">
-                                            <Badge variant="outline" className="font-normal text-[10px] border-border/50 text-muted-foreground bg-slate-50 dark:bg-slate-900/50">
+                                            <span className="text-xs text-muted-foreground">
                                                 {ticket.type}
-                                            </Badge>
+                                            </span>
                                         </TableCell>
                                         <TableCell className="font-mono font-medium py-3 overflow-hidden text-muted-foreground">
                                             <a href={ticket.url} target="_blank" className="hover:text-primary transition-colors whitespace-nowrap">
@@ -173,12 +183,23 @@ export default function ManagerPage() {
                                             </div>
                                         </TableCell>
                                         <TableCell className="py-3 overflow-hidden">
-                                            <Badge variant="outline" className={`text-[10px] whitespace-nowrap border px-2 py-0.5 h-6 rounded-md font-medium ${statusColors[ticket.status] || "bg-slate-100 text-slate-600"}`}>
+                                            <span className="text-xs text-muted-foreground">
                                                 {ticket.status}
-                                            </Badge>
+                                            </span>
                                         </TableCell>
-                                        <TableCell className="text-muted-foreground truncate text-right pr-6 py-3">
-                                            {ticket.assignee}
+                                        <TableCell className="text-right pr-6 py-3">
+                                            {ticket.assignee.avatarUrl ? (
+                                                <img 
+                                                    src={ticket.assignee.avatarUrl} 
+                                                    alt={ticket.assignee.displayName}
+                                                    title={ticket.assignee.displayName}
+                                                    className="h-7 w-7 rounded-full ml-auto"
+                                                />
+                                            ) : (
+                                                <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center ml-auto" title={ticket.assignee.displayName}>
+                                                    <span className="text-[10px] font-bold text-muted-foreground">{ticket.assignee.displayName.charAt(0)}</span>
+                                                </div>
+                                            )}
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -192,14 +213,22 @@ export default function ManagerPage() {
             {/* Unlabeled Pages */}
             <Card className="flex flex-col overflow-hidden h-full border-border bg-card">
               <CardHeader className="bg-muted/30 border-b border-border shrink-0 py-4 px-6">
-                <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                        <FileText className="h-5 w-5 text-blue-500" />
-                        Unlabeled Pages
-                    </CardTitle>
-                    <Badge variant="secondary" className="font-mono">{pages.length}</Badge>
+                <div className="flex items-center gap-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border/50 shadow-sm bg-muted text-foreground">
+                        <FileText className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                            <CardTitle className="text-base font-semibold text-foreground">Unlabeled Pages</CardTitle>
+                            {pages.length > 0 && (
+                                <span className="bg-foreground text-background text-xs font-bold px-2 py-0.5 rounded-full">
+                                    {pages.length}
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">Confluence pages with no labels</p>
+                    </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">Confluence pages with no labels</p>
               </CardHeader>
               <CardContent className="p-0 flex-1 min-h-0">
                  {isLoading ? (
@@ -211,27 +240,56 @@ export default function ManagerPage() {
                         <Table className="table-fixed w-full text-xs">
                             <TableHeader className="bg-slate-50 dark:bg-slate-900/50 sticky top-0 z-10 shadow-sm border-b border-border">
                                 <TableRow className="hover:bg-transparent border-0">
-                                    <TableHead className="pl-6 w-auto h-10">Title</TableHead>
-                                    <TableHead className="w-[140px] h-10">Author</TableHead>
-                                    <TableHead className="w-[110px] text-right pr-6 h-10">Updated</TableHead>
+                                    <TableHead className="w-[90px] pl-6 h-10">Type</TableHead>
+                                    <TableHead className="w-[110px] h-10">ID</TableHead>
+                                    <TableHead className="w-auto h-10">Title</TableHead>
+                                    <TableHead className="w-[130px] h-10">Updated</TableHead>
+                                    <TableHead className="w-[140px] pr-6 text-right h-10">Author</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {pages.map((page: Page) => (
                                     <TableRow key={page.id} className="border-border/50 hover:bg-muted/40 transition-colors">
-                                        <TableCell className="font-medium pl-6 py-3 overflow-hidden">
-                                             <a href={page.url} target="_blank" className="hover:underline hover:text-primary flex items-center gap-2.5 group w-full">
-                                                <div className="p-1 rounded bg-blue-500/10 text-blue-500">
-                                                    <FileText className="h-3.5 w-3.5" />
+                                        <TableCell className="pl-6 py-3 overflow-hidden">
+                                            <span className="text-xs text-muted-foreground">
+                                                Page
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="font-mono font-medium py-3 overflow-hidden text-muted-foreground">
+                                            <span className="truncate block w-full text-xs" title={page.id}>
+                                                {page.id}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="font-medium py-3 overflow-hidden">
+                                             <div className="flex flex-col min-w-0">
+                                                {page.parent && (
+                                                    <span className="text-[10px] text-muted-foreground truncate mb-0.5 flex items-center gap-1">
+                                                        <span className="opacity-70">in</span> {page.parent}
+                                                    </span>
+                                                )}
+                                                <a href={page.url} target="_blank" className="hover:underline hover:text-primary truncate text-foreground" title={page.title}>
+                                                    {page.title}
+                                                </a>
+                                             </div>
+                                        </TableCell>
+                                        <TableCell className="py-3 overflow-hidden">
+                                            <span className="text-xs text-muted-foreground">
+                                                {page.updated && new Date(page.updated).toLocaleDateString()}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="text-right pr-6 py-3">
+                                            {page.author.avatarUrl ? (
+                                                <img 
+                                                    src={page.author.avatarUrl} 
+                                                    alt={page.author.displayName}
+                                                    title={page.author.displayName}
+                                                    className="h-7 w-7 rounded-full ml-auto"
+                                                />
+                                            ) : (
+                                                <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center ml-auto" title={page.author.displayName}>
+                                                    <span className="text-[10px] font-bold text-muted-foreground">{page.author.displayName.charAt(0)}</span>
                                                 </div>
-                                                <span className="truncate text-foreground" title={page.title}>{page.title}</span>
-                                            </a>
-                                        </TableCell>
-                                        <TableCell className="text-muted-foreground truncate py-3 overflow-hidden">
-                                            {page.author}
-                                        </TableCell>
-                                        <TableCell className="text-muted-foreground text-right whitespace-nowrap pr-6 py-3">
-                                            {page.updated && new Date(page.updated).toLocaleDateString()}
+                                            )}
                                         </TableCell>
                                     </TableRow>
                                 ))}

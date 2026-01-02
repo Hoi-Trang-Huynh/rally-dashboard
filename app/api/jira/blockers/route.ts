@@ -46,8 +46,10 @@ export async function GET() {
 
     const projectKey = process.env.JIRA_PROJECT_KEY || "RAL";
     
-    // JQL: Assignee is the authenticated user, Due Date is within next 7 days (and not past), Status not Done
-    const jql = `project = ${projectKey} AND assignee = "${accountId}" AND duedate >= now() AND duedate <= 7d AND statusCategory != Done ORDER BY duedate ASC`;
+    // JQL: Assignee is the authenticated user, Due Date is within next 7 days, Status not Done
+    const jql = `project = ${projectKey} AND assignee = "${accountId}" AND duedate >= startOfDay() AND duedate <= startOfDay("+7d") AND statusCategory != Done ORDER BY duedate ASC`;
+    
+    console.log("Blockers JQL:", jql);
 
     const response = await fetch(
       `https://${host}/rest/api/3/search/jql`,
@@ -55,14 +57,13 @@ export async function GET() {
         method: "POST",
         headers: {
           Authorization: authHeader,
-
           Accept: "application/json",
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           jql,
           maxResults: 10,
-          fields: ["key", "summary", "status", "priority", "duedate", "assignee"]
+          fields: ["key", "summary", "status", "priority", "duedate", "assignee", "reporter"]
         }),
         cache: "no-store",
       }
@@ -70,7 +71,7 @@ export async function GET() {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error(`Jira Due-Soon API Failed (${response.status}):`, errorBody);
+      console.error(`Jira Blockers API Failed (${response.status}):`, errorBody);
       throw new Error(`Jira API error: ${response.status}`);
     }
 
@@ -78,16 +79,37 @@ export async function GET() {
     
     const tickets = data.issues?.map((issue: Record<string, unknown>) => {
       const fields = issue.fields as Record<string, unknown>;
+      const reporter = fields?.reporter as { displayName?: string; avatarUrls?: Record<string, string> } | null;
+      const priority = fields?.priority as { name?: string; iconUrl?: string } | null;
+      const duedate = fields?.duedate as string | null;
+      
+      // Calculate days until due
+      let daysUntilDue = 0;
+      if (duedate) {
+        const due = new Date(duedate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        due.setHours(0, 0, 0, 0);
+        daysUntilDue = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      }
+      
+      const avatarUrl = reporter?.avatarUrls?.["48x48"] || reporter?.avatarUrls?.["32x32"] || reporter?.avatarUrls?.["24x24"];
+      
       return {
         id: issue.id,
         key: issue.key,
         summary: fields?.summary,
         status: (fields?.status as { name?: string })?.name,
-        priority: (fields?.priority as { name?: string })?.name || "Medium",
-        // Map due date to updated so it shows in the card date slot
-        updated: fields?.duedate || new Date().toISOString(), 
+        priority: priority?.name || "Medium",
+        duedate: duedate,
+        daysUntilDue: daysUntilDue,
+        updated: duedate || new Date().toISOString(), 
         url: `https://${host}/browse/${issue.key}`,
-        assignee: (fields?.assignee as { displayName?: string })?.displayName,
+        source: 'jira',
+        assignee: {
+          displayName: reporter?.displayName || "Unknown",
+          avatarUrl: avatarUrl
+        },
       };
     }) || [];
 
