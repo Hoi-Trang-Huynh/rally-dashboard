@@ -36,6 +36,25 @@ jobs:
 
       - name: Verify Build
         run: npm run build
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB: ${{ secrets.MONGODB_DB }}
+          CODEMAGIC_TOKEN: ${{ secrets.CODEMAGIC_TOKEN }}
+          CODEMAGIC_APP_ID: ${{ secrets.CODEMAGIC_APP_ID }}
+          JIRA_HOST: ${{ secrets.JIRA_HOST }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
+          JIRA_DELIVERY_BOARD_ID: ${{ secrets.JIRA_DELIVERY_BOARD_ID }}
+          JIRA_OPERATION_BOARD_ID: ${{ secrets.JIRA_OPERATION_BOARD_ID }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_OWNER: ${{ secrets.GH_OWNER }}
+          GH_REPO: ${{ secrets.GH_REPO }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          AZURE_AD_CLIENT_ID: ${{ secrets.AZURE_AD_CLIENT_ID }}
+          AZURE_AD_CLIENT_SECRET: ${{ secrets.AZURE_AD_CLIENT_SECRET }}
+          AZURE_AD_TENANT_ID: ${{ secrets.AZURE_AD_TENANT_ID }}
 
       - name: Set up Google Cloud authentication
         uses: google-github-actions/auth@v2
@@ -106,4 +125,4 @@ jobs:
             --port=3000 \
             --memory=512Mi \
             --max-instances=5 \
-            --set-env-vars="MONGODB_URI=${{ secrets.MONGODB_URI }},MONGODB_DB=${{ secrets.MONGODB_DB }},CODEMAGIC_TOKEN=${{ secrets.CODEMAGIC_TOKEN }},JIRA_HOST=${{ secrets.JIRA_HOST }},JIRA_EMAIL=${{ secrets.JIRA_EMAIL }},JIRA_API_TOKEN=${{ secrets.JIRA_API_TOKEN }},JIRA_PROJECT_KEY=${{ secrets.JIRA_PROJECT_KEY }},JIRA_DELIVERY_BOARD_ID=${{ secrets.JIRA_DELIVERY_BOARD_ID }},GH_TOKEN=${{ secrets.GH_TOKEN }},GH_OWNER=${{ secrets.GH_OWNER }},GH_REPO=${{ secrets.GH_REPO }}"
+            --set-env-vars="MONGODB_URI=${{ secrets.MONGODB_URI }},MONGODB_DB=${{ secrets.MONGODB_DB }},CODEMAGIC_TOKEN=${{ secrets.CODEMAGIC_TOKEN }},CODEMAGIC_APP_ID=${{ secrets.CODEMAGIC_APP_ID }},JIRA_HOST=${{ secrets.JIRA_HOST }},JIRA_EMAIL=${{ secrets.JIRA_EMAIL }},JIRA_API_TOKEN=${{ secrets.JIRA_API_TOKEN }},JIRA_PROJECT_KEY=${{ secrets.JIRA_PROJECT_KEY }},JIRA_DELIVERY_BOARD_ID=${{ secrets.JIRA_DELIVERY_BOARD_ID }},JIRA_OPERATION_BOARD_ID=${{ secrets.JIRA_OPERATION_BOARD_ID }},GH_TOKEN=${{ secrets.GH_TOKEN }},GH_OWNER=${{ secrets.GH_OWNER }},GH_REPO=${{ secrets.GH_REPO }},NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }},NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }},AZURE_AD_CLIENT_ID=${{ secrets.AZURE_AD_CLIENT_ID }},AZURE_AD_CLIENT_SECRET=${{ secrets.AZURE_AD_CLIENT_SECRET }},AZURE_AD_TENANT_ID=${{ secrets.AZURE_AD_TENANT_ID }}"
