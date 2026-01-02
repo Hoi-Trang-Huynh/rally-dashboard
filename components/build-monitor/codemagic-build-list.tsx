@@ -15,6 +15,8 @@ interface CodemagicBuild {
     version: string;
     workflow: string;
     started_at: string;
+    started_by?: string;
+    created_at?: string;
     duration: number;
     artifact?: {
         name: string;
@@ -28,6 +30,7 @@ interface CodemagicBuild {
         size: number;
     }[];
     commit_hash?: string;
+    commit_message?: string;
     author_name?: string;
     author_avatar?: string;
     instance_type?: string;
@@ -103,18 +106,22 @@ export function CodemagicBuildList() {
                 {builds.map((build) => (
                     <Card key={build.id} className="overflow-hidden flex flex-col">
                         <CardHeader className="bg-muted/30 border-b border-border py-4">
-                            <div className="flex justify-between items-start">
-                                 <div className="space-y-1">
+                            <div className="flex justify-between items-start gap-2">
+                                 <div className="space-y-1 min-w-0 flex-1">
                                     <CardTitle className="text-base flex items-center gap-2">
-                                        <Smartphone className="h-4 w-4 text-foreground" />
-                                        {build.appName || "Rally App"}
+                                        <Smartphone className="h-4 w-4 text-foreground shrink-0" />
+                                        <span className="truncate">{build.appName || "Rally App"}</span>
                                     </CardTitle>
                                     <p className="text-xs text-muted-foreground">{build.workflow}</p>
+                                    {(build.commit_hash || build.commit_message) && (
+                                        <p className="text-xs text-muted-foreground truncate bg-muted/50 px-2 py-1 rounded border border-border/50 font-mono" title={build.commit_message}>
+                                            {build.commit_hash && <span>#{build.commit_hash}</span>}
+                                            {build.commit_hash && build.commit_message && " - "}
+                                            <span className="font-sans">{build.commit_message}</span>
+                                        </p>
+                                    )}
                                  </div>
-                                 {build.status === 'finished' ? 
-                                    <CheckCircle2 className="h-5 w-5 text-emerald-500" /> : 
-                                    (build.status === 'failed' ? <XCircle className="h-5 w-5 text-red-500" /> : <RefreshCw className="h-5 w-5 animate-spin text-amber-500" />)
-                                 }
+
                             </div>
                         </CardHeader>
                         <CardContent className="p-6 flex-1 flex flex-col gap-4">
@@ -131,20 +138,26 @@ export function CodemagicBuildList() {
                                     <div className="flex items-center gap-1.5">
                                         <GitCommit className="h-3 w-3 text-muted-foreground shrink-0" />
                                         <p className="font-mono">{build.version || "-"}</p>
-                                        {build.commit_hash && <span className="text-xs text-muted-foreground px-1 bg-muted rounded">#{build.commit_hash}</span>}
                                     </div>
                                 </div>
                                 <div>
                                     <p className="text-xs text-muted-foreground mb-1">Triggered By</p>
-                                    <div className="flex items-center gap-1.5">
-                                        {build.author_avatar ? (
-                                            <img src={build.author_avatar} alt={build.author_name} className="h-5 w-5 rounded-full border border-border" />
-                                        ) : (
-                                            <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold">
-                                                {build.author_name?.charAt(0) || "?"}
-                                            </div>
+                                    <div className="flex flex-col gap-1">
+                                        <div className="flex items-center gap-1.5">
+                                            {build.author_avatar ? (
+                                                <img src={build.author_avatar} alt={build.author_name} className="h-5 w-5 rounded-full border border-border" />
+                                            ) : (
+                                                <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold">
+                                                    {build.author_name?.charAt(0) || "?"}
+                                                </div>
+                                            )}
+                                            <p className="font-medium truncate text-xs">{build.author_name || "System"}</p>
+                                        </div>
+                                        {build.started_by && (
+                                            <span className="text-[10px] text-muted-foreground px-1.5 py-0.5 bg-muted rounded w-fit">
+                                                {build.started_by}
+                                            </span>
                                         )}
-                                        <p className="font-medium truncate text-xs">{build.author_name || "System"}</p>
                                     </div>
                                 </div>
                                 <div>
@@ -161,8 +174,8 @@ export function CodemagicBuildList() {
                                     </div>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-muted-foreground mb-1">Date</p>
-                                    <p className="font-medium text-xs">{new Date(build.started_at).toLocaleDateString()}</p>
+                                    <p className="text-xs text-muted-foreground mb-1">Started</p>
+                                    <p className="font-medium text-xs">{new Date(build.started_at).toLocaleString()}</p>
                                 </div>
                             </div>
 

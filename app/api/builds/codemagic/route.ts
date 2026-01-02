@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
                 
                 if (detailRes.ok) {
                     const detailData = await detailRes.json();
-                    
+
                     // Codemagic API behavior:
                     // If fetching /builds/{id}, it often returns { build: { ... } } or just { ... }
                     // We check for the nested 'build' property first.
@@ -98,18 +98,21 @@ export async function GET(request: NextRequest) {
         return {
             id: build._id || build.id,
             appId: build.appId,
-            appName: build.app?.name || build.appName || "Rally App",
+            appName: build.config?.name || build.workflowName || build.app?.name || build.appName || "Rally App",
             status: build.status,
             branch: build.branch,
             version: build.tag || build.version,
-            workflow: build.workflowId || "default",
+            workflow: build.fileWorkflowId || build.workflowId || "default",
             started_at: build.startedAt || build.started_at,
+            started_by: build.startedBy,
+            created_at: build.createdAt,
             finished_at: build.finishedAt || build.finished_at,
             duration: build.duration || calculateDuration(build.startedAt || build.started_at, build.finishedAt || build.finished_at),
-            commit_hash: build.commit?.hash?.substring(0, 7) || build.commit?.hash, // Short hash
+            commit_hash: build.commit?.hash?.substring(0, 7), // Short hash
+            commit_message: build.commit?.commitMessage?.split('\n')[0], // First line only
             author_name: build.commit?.authorName,
             author_avatar: build.commit?.authorAvatarUrl,
-            instance_type: build.instanceType?.replace(/_/g, ' '), // e.g. "mac mini m2"
+            instance_type: build.instanceType?.replace(/_/g, ' '), // e.g. "linux x2"
             artifact: artifact ? {
                 name: artifact.name,
                 url: artifact.url, // Authenticated URL

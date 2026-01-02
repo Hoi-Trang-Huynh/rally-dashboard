@@ -37,21 +37,35 @@ export async function GET() {
                 const data = await res.json();
                 return {
                     repo,
-                    runs: data.workflow_runs.map((run: any) => ({
-                        id: run.id,
-                        name: run.name,
-                        status: run.status,
-                        conclusion: run.conclusion,
-                        branch: run.head_branch,
-                        commit: run.head_sha.substring(0, 7),
-                        message: run.head_commit?.message,
-                        author: run.triggering_actor?.login,
-                        avatar: run.triggering_actor?.avatar_url,
-                        url: run.html_url,
-                        created_at: run.created_at,
-                        updated_at: run.updated_at,
-                        duration: 0 // Calculate if needed/avail
-                    }))
+                    total_count: data.total_count || 0,
+                    runs: data.workflow_runs.map((run: any) => {
+                        // Calculate duration in seconds
+                        let duration = 0;
+                        if (run.run_started_at && run.updated_at) {
+                            const start = new Date(run.run_started_at).getTime();
+                            const end = new Date(run.updated_at).getTime();
+                            if (!isNaN(start) && !isNaN(end) && end > start) {
+                                duration = Math.round((end - start) / 1000);
+                            }
+                        }
+
+                        return {
+                            id: run.id,
+                            name: run.name || run.display_title,
+                            status: run.status,
+                            conclusion: run.conclusion,
+                            branch: run.head_branch,
+                            commit: run.head_sha?.substring(0, 7),
+                            message: run.head_commit?.message?.split('\n')[0], // First line only
+                            author: run.actor?.login || run.triggering_actor?.login,
+                            avatar: run.actor?.avatar_url || run.triggering_actor?.avatar_url,
+                            url: run.html_url,
+                            created_at: run.created_at,
+                            updated_at: run.updated_at,
+                            run_started_at: run.run_started_at,
+                            duration
+                        };
+                    })
                 };
             } catch (error) {
                 console.error(`Error fetching ${repo}:`, error);
