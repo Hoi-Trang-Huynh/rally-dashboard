@@ -38,7 +38,7 @@ export function AuthenticatedLayout({ children, user }: AuthenticatedLayoutProps
             <ThemeToggle />
           </div>
         </header>
-        <div className="flex flex-1 flex-col">
+        <div className="flex flex-1 flex-col animate-in fade-in duration-300">
           {children}
         </div>
       </SidebarInset>

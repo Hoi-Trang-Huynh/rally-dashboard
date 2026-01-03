@@ -39,7 +39,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 export function AppSidebar({ user, ...props }: AppSidebarProps) {
   const pathname = usePathname();
 
-  const menuItemClass = "h-12 text-base font-medium transition-all duration-200 data-[active=true]:bg-gradient-to-r data-[active=true]:from-pink-50 data-[active=true]:to-transparent dark:data-[active=true]:from-pink-950 dark:data-[active=true]:to-transparent data-[active=true]:text-pink-600 dark:data-[active=true]:text-pink-400 data-[active=true]:border-l-4 data-[active=true]:border-pink-500 rounded-r-lg rounded-l-none pl-3";
+  const menuItemClass = "h-12 text-base font-medium transition-all duration-200 data-[active=true]:bg-gradient-to-r data-[active=true]:from-pink-50 data-[active=true]:to-transparent dark:data-[active=true]:from-pink-950 dark:data-[active=true]:to-transparent data-[active=true]:text-pink-600 dark:data-[active=true]:text-pink-400 data-[active=true]:border-l-4 data-[active=true]:border-pink-500 rounded-r-lg rounded-l-none pl-3 hover:bg-muted/50 hover:scale-[1.01]";
 
   return (
     <Sidebar collapsible="icon" {...props}>

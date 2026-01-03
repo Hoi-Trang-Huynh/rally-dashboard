@@ -4,7 +4,17 @@ import { LayoutDashboard } from "lucide-react";
 import { SprintBoardCard } from "@/components/dashboard/sprint-board-card";
 import { ReleasesCard } from "@/components/dashboard/releases-card";
 
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning! ☀️";
+  if (hour < 17) return "Good afternoon! 🌤️";
+  if (hour < 21) return "Good evening! 🌅";
+  return "Good night! 🌙";
+}
+
 export default function Home() {
+  const greeting = getGreeting();
+
   return (
     <div className="flex flex-col gap-8 py-8 px-6">
        <div className="flex items-center gap-4 border-b border-border/50 pb-6">
@@ -13,7 +23,7 @@ export default function Home() {
         </div>
         <div>
             <h1 className="text-3xl font-bold text-foreground tracking-tight">Overview</h1>
-            <p className="text-lg text-muted-foreground">Welcome to Mission Control</p>
+            <p className="text-lg text-muted-foreground">{greeting} Welcome to Mission Control</p>
         </div>
       </div>
 
