@@ -258,7 +258,7 @@ export default function CalendarPage() {
                         <div key={day.toString()} className="border-r border-border/30 p-1 flex flex-col gap-1">
                              {allDayEvents.map(event => (
                                  <div 
-                                    key={event._id} 
+                                    key={String(event._id)} 
                                     className={cn("text-[10px] px-2 py-1 rounded truncate font-medium border cursor-pointer hover:opacity-80 transition-opacity", getEventTypeColor(event.type))}
                                     onClick={(e) => {
                                         e.stopPropagation();
@@ -328,7 +328,7 @@ export default function CalendarPage() {
                                       const { top, height } = getEventPosition(event);
                                       return (
                                           <div
-                                              key={event._id}
+                                              key={String(event._id)}
                                               className={cn(
                                                   "absolute left-1 right-1 rounded border overflow-hidden cursor-pointer hover:brightness-95 transition-all z-20 p-1 flex flex-col shadow-sm",
                                                   getEventTypeColor(event.type)
