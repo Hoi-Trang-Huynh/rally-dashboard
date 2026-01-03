@@ -40,13 +40,11 @@ export function GithubBuildList() {
             setData(builds);
             
             // Initialize all repos as expanded by default
-            const expanded: Record<string, boolean> = {};
+            // Initialize pagination but keep repos collapsed
             const pages: Record<string, number> = {};
             builds.forEach((repo: RepoBuilds) => {
-              expanded[repo.repo] = true;
               pages[repo.repo] = 1;
             });
-            setExpandedRepos(expanded);
             setRepoPages(pages);
         }
       } catch (error) {
@@ -61,7 +59,7 @@ export function GithubBuildList() {
   const toggleRepo = (repoName: string) => {
     setExpandedRepos(prev => ({
       ...prev,
-      [repoName]: !prev[repoName]
+      [repoName]: !prev[repoName] // Toggles from false(undefined) to true
     }));
   };
 
@@ -79,7 +77,7 @@ export function GithubBuildList() {
   return (
     <div className="space-y-6">
        {data.map((repoData) => {
-           const isExpanded = expandedRepos[repoData.repo] ?? true;
+           const isExpanded = expandedRepos[repoData.repo] ?? false;
            const currentPage = repoPages[repoData.repo] ?? 1;
            const totalPages = Math.ceil(repoData.runs.length / ITEMS_PER_PAGE);
            const paginatedRuns = repoData.runs.slice(

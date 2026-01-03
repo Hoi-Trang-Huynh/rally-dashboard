@@ -12,6 +12,7 @@ import {
   Search,
   Settings,
   Briefcase,
+  Users,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
@@ -92,6 +93,19 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
               <Link href="/quick-links">
                 <LinkIcon className="h-6 w-6" />
                 <span>Quick Links</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton 
+              asChild 
+              tooltip="Team" 
+              isActive={pathname === "/team"}
+              className={menuItemClass}
+            >
+              <Link href="/team">
+                <Users className="h-6 w-6" />
+                <span>Team</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

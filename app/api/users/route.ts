@@ -44,7 +44,7 @@ export async function GET() {
 
     // Fetch users from Microsoft Graph
     const usersResponse = await fetch(
-      "https://graph.microsoft.com/v1.0/users?$select=id,displayName,mail,userPrincipalName,jobTitle&$top=100",
+      "https://graph.microsoft.com/v1.0/users?$select=id,displayName,mail,userPrincipalName,jobTitle&$top=100&$expand=manager($select=id,displayName)",
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -61,10 +61,10 @@ export async function GET() {
         console.warn("⚠️ Falling back to mock users due to missing Graph API permissions.");
         
         const mockUsers = [
-          { id: "mock-1", name: "Alice Dev", email: "alice@rally-go.com", jobTitle: "Senior Engineer" },
-          { id: "mock-2", name: "Bob Design", email: "bob@rally-go.com", jobTitle: "Product Designer" },
-          { id: "mock-3", name: "Charlie PM", email: "charlie@rally-go.com", jobTitle: "Product Manager" },
-          { id: "mock-4", name: "David QA", email: "david@rally-go.com", jobTitle: "QA Engineer" },
+          { id: "mock-1", name: "Alice Dev", email: "alice@rally-go.com", jobTitle: "Senior Engineer", managerId: "mock-2" },
+          { id: "mock-2", name: "Bob Design", email: "bob@rally-go.com", jobTitle: "Product Designer", managerId: null },
+          { id: "mock-3", name: "Charlie PM", email: "charlie@rally-go.com", jobTitle: "Product Manager", managerId: "mock-2" },
+          { id: "mock-4", name: "David QA", email: "david@rally-go.com", jobTitle: "QA Engineer", managerId: "mock-1" },
         ];
         
         return NextResponse.json({ users: mockUsers }, { status: 200 });
@@ -85,11 +85,16 @@ export async function GET() {
       mail: string | null;
       userPrincipalName: string;
       jobTitle: string | null;
+      manager?: {
+        id: string;
+        displayName: string;
+      };
     }) => ({
       id: user.id,
       name: user.displayName,
       email: user.mail || user.userPrincipalName,
-      jobTitle: user.jobTitle || "Team Member",
+      jobTitle: user.jobTitle,
+      managerId: user.manager?.id || null,
     }));
 
     return NextResponse.json({ users }, { status: 200 });

@@ -75,14 +75,16 @@ export function CodemagicBuildList() {
     return (
         <div className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {builds.map((build) => (
+                {builds.map((build, i) => (
                     <Card key={build.id} className="overflow-hidden flex flex-col">
-                        <CardHeader className="bg-muted/30 border-b border-border py-4">
+                        <CardHeader className="bg-muted/30 border-b border-border py-4 px-6">
                             <div className="flex justify-between items-start gap-2">
                                  <div className="space-y-1 min-w-0 flex-1">
                                     <CardTitle className="text-base flex items-center gap-2">
                                         <Smartphone className="h-4 w-4 text-foreground shrink-0" />
-                                        <span className="truncate">{build.appName}</span>
+                                        <span className="truncate">
+                                            {build.appName} - #{String((page - 1) * 9 + i + 1).padStart(2, '0')}
+                                        </span>
                                     </CardTitle>
                                     <p className="text-xs text-muted-foreground">{build.workflow}</p>
                                     {(build.commitHash || build.commitMessage) && (
@@ -93,7 +95,6 @@ export function CodemagicBuildList() {
                                         </p>
                                     )}
                                  </div>
-
                             </div>
                         </CardHeader>
                         <CardContent className="p-6 flex-1 flex flex-col gap-4">

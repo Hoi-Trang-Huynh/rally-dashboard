@@ -24,20 +24,32 @@ export default function BuildMonitorPage() {
             </div>
         </div>
 
-        <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg">
+        <div className="flex items-center gap-3">
             <button 
                 onClick={() => setActiveTab("mobile")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "mobile" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                className={`group relative flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-300 ${
+                    activeTab === "mobile" 
+                        ? "border-pink-500/50 bg-background shadow-md shadow-pink-500/10 ring-1 ring-pink-500/20 text-foreground" 
+                        : "border-border/50 bg-muted/30 text-muted-foreground hover:bg-background hover:border-pink-500/50 hover:shadow-md hover:shadow-pink-500/5 hover:text-foreground"
+                }`}
             >
-                <Smartphone className="h-4 w-4" />
-                Mobile
+                <Smartphone className={`h-4 w-4 transition-colors ${
+                    activeTab === "mobile" ? "text-pink-500" : "group-hover:text-pink-500"
+                }`} />
+                <span>Mobile</span>
             </button>
             <button 
                 onClick={() => setActiveTab("backend")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "backend" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                className={`group relative flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-300 ${
+                    activeTab === "backend" 
+                        ? "border-pink-500/50 bg-background shadow-md shadow-pink-500/10 ring-1 ring-pink-500/20 text-foreground" 
+                        : "border-border/50 bg-muted/30 text-muted-foreground hover:bg-background hover:border-pink-500/50 hover:shadow-md hover:shadow-pink-500/5 hover:text-foreground"
+                }`}
             >
-                <Github className="h-4 w-4" />
-                Backend
+                <Github className={`h-4 w-4 transition-colors ${
+                    activeTab === "backend" ? "text-pink-500" : "group-hover:text-pink-500"
+                }`} />
+                <span>Backend</span>
             </button>
         </div>
       </div>

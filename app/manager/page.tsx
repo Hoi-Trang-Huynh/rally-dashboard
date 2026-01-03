@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BudgetView } from "@/components/manager/budget-view";
 import { 
   Briefcase, 
-  AlertTriangle, 
+  Brush, 
   FileText,
   Bug,
   CheckSquare, // Task
@@ -107,20 +108,33 @@ export default function ManagerPage() {
             </div>
         </div>
 
-        <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg">
+        <div className="flex items-center gap-3">
             <button 
                 onClick={() => setActiveTab("grooming")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "grooming" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                className={`group relative flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-300 ${
+                    activeTab === "grooming" 
+                        ? "border-pink-500/50 bg-background shadow-md shadow-pink-500/10 ring-1 ring-pink-500/20 text-foreground" 
+                        : "border-border/50 bg-muted/30 text-muted-foreground hover:bg-background hover:border-pink-500/50 hover:shadow-md hover:shadow-pink-500/5 hover:text-foreground"
+                }`}
             >
-                <AlertTriangle className="h-4 w-4" />
-                Grooming
+                <Brush className={`h-4 w-4 transition-colors ${
+                    activeTab === "grooming" ? "text-pink-500" : "group-hover:text-pink-500"
+                }`} />
+                <span>Grooming</span>
             </button>
+            
             <button 
                 onClick={() => setActiveTab("budget")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "budget" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                className={`group relative flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-300 ${
+                    activeTab === "budget" 
+                        ? "border-pink-500/50 bg-background shadow-md shadow-pink-500/10 ring-1 ring-pink-500/20 text-foreground" 
+                        : "border-border/50 bg-muted/30 text-muted-foreground hover:bg-background hover:border-pink-500/50 hover:shadow-md hover:shadow-pink-500/5 hover:text-foreground"
+                }`}
             >
-                <Banknote className="h-4 w-4" />
-                Budget
+                <Banknote className={`h-4 w-4 transition-colors ${
+                    activeTab === "budget" ? "text-pink-500" : "group-hover:text-pink-500"
+                }`} />
+                <span>Budget</span>
             </button>
         </div>
       </div>
@@ -132,7 +146,7 @@ export default function ManagerPage() {
               <CardHeader className="bg-muted/30 border-b border-border shrink-0 py-4 px-6">
                 <div className="flex items-center gap-4">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border/50 shadow-sm bg-muted text-foreground">
-                        <AlertTriangle className="h-5 w-5" />
+                        <Brush className="h-5 w-5" />
                     </div>
                     <div className="flex-1">
                         <div className="flex items-center gap-2">
@@ -143,21 +157,17 @@ export default function ManagerPage() {
                                 </span>
                             )}
                         </div>
-                        <p className="text-sm text-muted-foreground">Missing Desc, AC, Labels, SP, Developer, or Due Date</p>
+                        <p className="text-sm text-muted-foreground">Items needing estimation or refinement</p>
                     </div>
                 </div>
               </CardHeader>
-              <CardContent className="p-0 flex-1 min-h-0">
-                 {isLoading ? (
-                     <div className="p-8 flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>
-                 ) : tickets.length === 0 ? (
-                     <div className="p-8 text-center text-muted-foreground">No ungroomed tickets found</div>
-                 ) : (
+              <CardContent className="p-0 flex-1 relative flex flex-col min-h-0">
+                  <div className="absolute inset-0">
                     <ScrollArea className="h-full w-full">
                         <Table className="table-fixed w-full text-xs">
                             <TableHeader className="bg-slate-50 dark:bg-slate-900/50 sticky top-0 z-10 shadow-sm border-b border-border">
                                 <TableRow className="hover:bg-transparent border-0">
-                                    <TableHead className="w-[90px] pl-6 h-10">Type</TableHead>
+                                    <TableHead className="w-[80px] pl-6 h-10">Type</TableHead>
                                     <TableHead className="w-[110px] h-10">Key</TableHead>
                                     <TableHead className="w-auto h-10">Summary</TableHead>
                                     <TableHead className="w-[130px] h-10">Status</TableHead>
@@ -168,27 +178,27 @@ export default function ManagerPage() {
                                 {tickets.map((ticket: Ticket) => (
                                     <TableRow key={ticket.id} className="border-border/50 hover:bg-muted/40 transition-colors">
                                         <TableCell className="pl-6 py-3 overflow-hidden">
-                                            <span className="text-xs text-muted-foreground">
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border ${badgeStyle} whitespace-nowrap`}>
                                                 {ticket.type}
                                             </span>
                                         </TableCell>
                                         <TableCell className="font-mono font-medium py-3 overflow-hidden text-muted-foreground">
-                                            <a href={ticket.url} target="_blank" className="hover:text-primary transition-colors whitespace-nowrap">
+                                            <span className="truncate block w-full text-xs" title={ticket.key}>
                                                 {ticket.key}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="font-medium py-3 overflow-hidden">
+                                            <a href={ticket.url} target="_blank" className="hover:underline hover:text-primary truncate block w-full text-foreground" title={ticket.summary}>
+                                                {ticket.summary}
                                             </a>
                                         </TableCell>
                                         <TableCell className="py-3 overflow-hidden">
-                                            <div className="truncate w-full font-medium text-foreground" title={ticket.summary}>
-                                                {ticket.summary}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="py-3 overflow-hidden">
-                                            <span className="text-xs text-muted-foreground">
+                                            <Badge variant="outline" className={`font-normal text-[10px] px-2 py-0 h-5 whitespace-nowrap ${badgeStyle}`}>
                                                 {ticket.status}
-                                            </span>
+                                            </Badge>
                                         </TableCell>
-                                        <TableCell className="text-right pr-6 py-3">
-                                            {ticket.assignee.avatarUrl ? (
+                                        <TableCell className="text-right whitespace-nowrap pr-6 py-3">
+                                            {ticket.assignee && ticket.assignee.avatarUrl ? (
                                                 <img 
                                                     src={ticket.assignee.avatarUrl} 
                                                     alt={ticket.assignee.displayName}
@@ -196,8 +206,8 @@ export default function ManagerPage() {
                                                     className="h-7 w-7 rounded-full ml-auto"
                                                 />
                                             ) : (
-                                                <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center ml-auto" title={ticket.assignee.displayName}>
-                                                    <span className="text-[10px] font-bold text-muted-foreground">{ticket.assignee.displayName.charAt(0)}</span>
+                                                <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center ml-auto" title={ticket.assignee?.displayName || "Unassigned"}>
+                                                    <span className="text-[10px] font-bold text-muted-foreground">{ticket.assignee?.displayName?.charAt(0) || "?"}</span>
                                                 </div>
                                             )}
                                         </TableCell>
@@ -206,7 +216,7 @@ export default function ManagerPage() {
                             </TableBody>
                         </Table>
                     </ScrollArea>
-                 )}
+                  </div>
               </CardContent>
             </Card>
 
@@ -219,23 +229,19 @@ export default function ManagerPage() {
                     </div>
                     <div className="flex-1">
                         <div className="flex items-center gap-2">
-                            <CardTitle className="text-base font-semibold text-foreground">Unlabeled Pages</CardTitle>
-                            {pages.length > 0 && (
+                             <CardTitle className="text-base font-semibold text-foreground">Unlabeled Pages</CardTitle>
+                             {pages.length > 0 && (
                                 <span className="bg-foreground text-background text-xs font-bold px-2 py-0.5 rounded-full">
                                     {pages.length}
                                 </span>
-                            )}
+                             )}
                         </div>
-                        <p className="text-sm text-muted-foreground">Confluence pages with no labels</p>
+                        <p className="text-sm text-muted-foreground">Confluence pages missing mandatory labels</p>
                     </div>
                 </div>
               </CardHeader>
-              <CardContent className="p-0 flex-1 min-h-0">
-                 {isLoading ? (
-                     <div className="p-8 flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>
-                 ) : pages.length === 0 ? (
-                     <div className="p-8 text-center text-muted-foreground">No unlabeled pages found</div>
-                 ) : (
+              <CardContent className="p-0 flex-1 relative flex flex-col min-h-0">
+                  <div className="absolute inset-0">
                     <ScrollArea className="h-full w-full">
                         <Table className="table-fixed w-full text-xs">
                             <TableHeader className="bg-slate-50 dark:bg-slate-900/50 sticky top-0 z-10 shadow-sm border-b border-border">
@@ -251,7 +257,7 @@ export default function ManagerPage() {
                                 {pages.map((page: Page) => (
                                     <TableRow key={page.id} className="border-border/50 hover:bg-muted/40 transition-colors">
                                         <TableCell className="pl-6 py-3 overflow-hidden">
-                                            <span className="text-xs text-muted-foreground">
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border ${badgeStyle} whitespace-nowrap`}>
                                                 Page
                                             </span>
                                         </TableCell>
@@ -277,7 +283,7 @@ export default function ManagerPage() {
                                                 {page.updated && new Date(page.updated).toLocaleDateString()}
                                             </span>
                                         </TableCell>
-                                        <TableCell className="text-right pr-6 py-3">
+                                        <TableCell className="text-right whitespace-nowrap pr-6 py-3">
                                             {page.author.avatarUrl ? (
                                                 <img 
                                                     src={page.author.avatarUrl} 
@@ -296,21 +302,18 @@ export default function ManagerPage() {
                             </TableBody>
                         </Table>
                     </ScrollArea>
-                 )}
+                  </div>
               </CardContent>
             </Card>
         </div>
       )}
 
       {activeTab === "budget" && (
-          <div className="flex flex-col items-center justify-center flex-1 min-h-0 border-2 border-dashed border-border/50 rounded-2xl bg-muted/10 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <div className="h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
-                  <span className="text-2xl">💰</span>
-              </div>
-              <h2 className="text-xl font-semibold">Budget Management</h2>
-              <p className="text-muted-foreground">Financial tracking and planning module coming soon.</p>
-          </div>
+         <div className="flex-1 min-h-0 overflow-auto animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <BudgetView />
+         </div>
       )}
     </div>
   );
 }
+
