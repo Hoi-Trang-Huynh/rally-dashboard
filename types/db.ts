@@ -41,3 +41,43 @@ export interface Expense {
   shares: Record<string, number>; // { "Bob": 300000, "Thanh": 300000 }
   createdAt: string; // ISO date
 }
+
+export interface Kudos {
+  _id?: string | ObjectId;
+  fromUserId: string;
+  fromUserName: string;
+  fromUserImage?: string | null;
+  toUserId: string;
+  toUserName: string;
+  toUserImage?: string | null;
+  message: string;
+  createdAt: string; // ISO date
+}
+
+export interface Bounty {
+  _id?: string | ObjectId;
+  title: string;
+  description?: string;
+  reward: string; // Free text - any reward description
+  jiraKey?: string; // Optional link to Jira ticket
+  createdBy: {
+    userId: string;
+    name: string;
+    image?: string | null;
+  };
+  claimedBy?: {
+    userId: string;
+    name: string;
+    image?: string | null;
+  };
+  rewardedTo?: {
+    userId: string;
+    name: string;
+    image?: string | null;
+  };
+  status: "open" | "claimed" | "rewarded";
+  createdAt: string;
+  claimedAt?: string;
+  rewardedAt?: string;
+}
+
