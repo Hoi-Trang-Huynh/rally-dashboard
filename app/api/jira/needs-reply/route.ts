@@ -79,16 +79,27 @@ export async function GET() {
     if (jiraResponse.ok) {
       const data = await jiraResponse.json();
       
-      // Flatten all comments from all issues, filtering out user's own comments
+      // Flatten all comments from all issues, filtering to only show UNREPLIED comments
       data.issues?.forEach((issue: any) => {
         const fields = issue.fields;
         const renderedFields = issue.renderedFields;
         const issueComments = fields?.comment?.comments || [];
         const renderedComments = renderedFields?.comment?.comments || [];
         
-        // Filter comments NOT by me
+        // Find the timestamp of the user's LAST comment on this specific issue
+        const userLastCommentTime = issueComments
+          .filter((c: any) => c.author?.accountId === accountId)
+          .map((c: any) => new Date(c.created).getTime())
+          .reduce((max: number, time: number) => Math.max(max, time), 0);
+        
+        // Filter to only comments by others that are NEWER than user's last comment
         issueComments.forEach((comment: any, index: number) => {
-          if (comment.author?.accountId === accountId) return; // Skip my own comments
+          // Skip my own comments
+          if (comment.author?.accountId === accountId) return;
+          
+          // Skip if user has replied after this comment (per-issue tracking)
+          const commentTime = new Date(comment.created).getTime();
+          if (userLastCommentTime > 0 && commentTime <= userLastCommentTime) return;
           
           const renderedComment = renderedComments[index];
           const rawBody = renderedComment?.body || "";

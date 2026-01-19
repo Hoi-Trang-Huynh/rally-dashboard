@@ -61,9 +61,15 @@ export const navigationConfig: LinkCategory[] = [
     description: "Design system and wireframes",
     links: [
       {
-        title: "Figma Design System",
+        title: "Design System",
         description: "Components & styles",
         url: "https://www.figma.com/design/JysAlx123tm6bs6DldkCZN/Rally?t=2H3dMraeNnNDaGEh-0",
+        iconName: "Figma",
+      },
+      {
+        title: "UX Process",
+        description: "User Experience workflow",
+        url: "https://www.figma.com/board/Bl98rLotYNyhg4SmmgNUzD/UX-Process---Rally",
         iconName: "Figma",
       },
     ],

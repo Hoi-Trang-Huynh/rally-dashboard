@@ -68,7 +68,10 @@ jobs:
         run: |
           IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.IMAGE_NAME }}/${{ env.IMAGE_NAME }}"
           TAG="${GITHUB_SHA::7}"
-          docker build -t "$IMAGE:latest" -t "$IMAGE:$TAG" .
+          docker build \
+            --build-arg NEXT_PUBLIC_BACKEND_URL=${{ secrets.NEXT_PUBLIC_BACKEND_URL }} \
+            -t "$IMAGE:latest" \
+            -t "$IMAGE:$TAG" .
           echo "IMAGE_FULL=$IMAGE:$TAG" >> $GITHUB_ENV
 
       - name: Ensure GAR repository exists

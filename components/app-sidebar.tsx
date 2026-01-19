@@ -13,6 +13,8 @@ import {
   Settings,
   Briefcase,
   Users,
+  MessageSquare,
+  Smartphone,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
@@ -145,6 +147,32 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
               <Link href="/calendar">
                 <CalendarDays className="h-6 w-6" />
                 <span>Calendar</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton 
+              asChild 
+              tooltip="Feedback" 
+              isActive={pathname === "/feedback"}
+              className={menuItemClass}
+            >
+              <Link href="/feedback">
+                <MessageSquare className="h-6 w-6" />
+                <span>Feedback</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton 
+              asChild 
+              tooltip="Live Testing (Coming Soon)" 
+              isActive={pathname === "/live-testing"}
+              className={menuItemClass}
+            >
+              <Link href="/live-testing" className="relative">
+                <Smartphone className="h-6 w-6" />
+                <span>Live Testing</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
