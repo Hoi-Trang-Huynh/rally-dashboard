@@ -11,7 +11,7 @@ export interface Feedback {
   username: string;
   comment: string;
   avatar_url?: string;
-  image_url?: string;
+  attachment_urls?: string[];
   categories?: FeedbackCategory[];
   resolved: boolean;
   created_at: string;
@@ -30,7 +30,7 @@ export interface CreateFeedbackRequest {
   username: string;
   comment: string;
   avatar_url?: string;
-  image_url?: string; // Optional image attachment
+  attachment_urls?: string[]; // Optional image attachment
   categories?: FeedbackCategory[];
 }
 

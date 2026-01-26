@@ -173,9 +173,11 @@ export function FeedbackList({ currentUser }: FeedbackListProps) {
           <p className="text-muted-foreground">Adjust your filters or submit the first feedback!</p>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="columns-1 md:columns-2 lg:columns-3 gap-4 space-y-4">
           {filteredFeedbacks.map((feedback) => (
-            <FeedbackItem key={feedback.id} feedback={feedback} onUpdate={fetchFeedbacks} />
+            <div key={feedback.id} className="break-inside-avoid">
+              <FeedbackItem feedback={feedback} onUpdate={fetchFeedbacks} />
+            </div>
           ))}
         </div>
       )}

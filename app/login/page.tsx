@@ -1,4 +1,5 @@
 import { signIn } from "@/lib/auth";
+import { version } from "@/package.json";
 
 export default function LoginPage() {
   return (
@@ -117,7 +118,7 @@ export default function LoginPage() {
       <div className="absolute bottom-4 left-0 right-0 z-20 flex justify-between items-center px-6">
         {/* Version Badge */}
         <div className="flex items-center gap-2 text-xs text-white/40 font-mono">
-          <span>v1.0.0</span>
+          <span>v{version}</span>
         </div>
 
         {/* System Status Indicator */}

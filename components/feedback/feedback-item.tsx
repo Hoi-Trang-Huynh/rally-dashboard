@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Check, X, Loader2, Calendar, MessageSquare, User as UserIcon } from "lucide-react";
+import { Check, X, Loader2, Calendar, Paperclip, ChevronLeft, ChevronRight } from "lucide-react";
 import { Feedback, FeedbackCategory } from "@/types/feedback";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { resolveFeedback } from "@/lib/api-feedback";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 interface FeedbackItemProps {
   feedback: Feedback;
@@ -25,6 +26,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export function FeedbackItem({ feedback, onUpdate }: FeedbackItemProps) {
   const [isUpdating, setIsUpdating] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const toggleResolve = async () => {
     setIsUpdating(true);
@@ -38,99 +40,143 @@ export function FeedbackItem({ feedback, onUpdate }: FeedbackItemProps) {
     }
   };
 
+  const nextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (feedback.attachment_urls) {
+      setCurrentImageIndex((prev) => (prev + 1) % feedback.attachment_urls!.length);
+    }
+  };
+
+  const prevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (feedback.attachment_urls) {
+      setCurrentImageIndex((prev) => (prev - 1 + feedback.attachment_urls!.length) % feedback.attachment_urls!.length);
+    }
+  };
+
   return (
-    <Card className={`group relative transition-all duration-300 border-border/50 overflow-hidden ${
-      feedback.resolved 
-        ? "bg-muted/30 border-l-4 border-l-emerald-500/50" 
-        : "bg-gradient-to-br from-card to-muted/20 border-l-4 border-l-amber-500/50"
-    }`}>
+    <Card className="group relative transition-all duration-300 border-border/40 hover:border-border/80 hover:shadow-sm bg-card overflow-hidden">
       
-      <div className="absolute top-4 right-4 flex gap-2 items-center">
+      <div className="absolute top-3 right-3 flex gap-2 items-center">
+        {feedback.resolved && (
+          <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border-emerald-200/50">
+            Resolved
+          </Badge>
+        )}
         {feedback.categories?.map((cat) => (
           <Badge 
             key={cat} 
             variant="outline" 
-            className={`text-[10px] px-2.5 py-0.5 h-6 font-semibold border tracking-wide uppercase ${CATEGORY_COLORS[cat] || CATEGORY_COLORS[FeedbackCategory.OTHER]}`}
+            className={`text-[10px] px-2 py-0.5 h-5 font-medium border tracking-wide uppercase ${CATEGORY_COLORS[cat] || CATEGORY_COLORS[FeedbackCategory.OTHER]}`}
           >
             {cat.replace("_", " ")}
           </Badge>
         ))}
       </div>
 
-      <CardHeader className="flex flex-col gap-3 pb-3 pr-12">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-                <Avatar className="h-11 w-11 border-2 border-background shadow-md">
-                <AvatarImage src={feedback.avatar_url} alt={feedback.username} />
-                <AvatarFallback className="bg-gradient-to-tr from-pink-500 to-orange-500 text-white font-bold">
-                    {feedback.username.slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-                </Avatar>
-                {/* Kept the avatar indicator as a secondary visual cue */}
-                <div className={`absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-background flex items-center justify-center text-[10px] text-white shadow-sm ${feedback.resolved ? "bg-emerald-500" : "bg-amber-500"}`}>
-                    {feedback.resolved ? <Check className="h-3 w-3" /> : <Loader2 className="h-3 w-3 animate-pulse" />}
-                </div>
+      <CardHeader className="flex flex-row gap-3 p-4 pb-2">
+         <Avatar className="h-9 w-9 border border-border/50">
+            <AvatarImage src={feedback.avatar_url} alt={feedback.username} />
+            <AvatarFallback className="text-xs bg-muted text-muted-foreground font-medium">
+                {feedback.username.slice(0, 2).toUpperCase()}
+            </AvatarFallback>
+         </Avatar>
+         <div className="flex flex-col gap-0.5">
+            <h4 className="text-sm font-medium text-foreground leading-none">{feedback.username}</h4>
+            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+              <span>{formatDistanceToNow(new Date(feedback.created_at), { addSuffix: true })}</span>
             </div>
-            
-            <div>
-              <h4 className="text-[15px] font-semibold text-foreground leading-none mb-1.5">{feedback.username}</h4>
-              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground/80">
-                <span className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    {formatDistanceToNow(new Date(feedback.created_at), { addSuffix: true })}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
+         </div>
       </CardHeader>
       
-      <CardContent className="pb-4 grid gap-4">
-        <div className="pl-1">
-          <p className="text-[14px] leading-relaxed whitespace-pre-wrap text-foreground/90 font-normal">
-             {feedback.comment}
-          </p>
-        </div>
+      <CardContent className="px-4 py-2 min-h-[3rem]">
+        <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">
+           {feedback.comment}
+        </p>
         
-        {feedback.image_url && (
-            <div className="mt-1 rounded-xl overflow-hidden border border-border/50 group/image relative shadow-sm">
-                <div className="absolute inset-0 bg-black/0 group-hover/image:bg-black/5 transition-colors pointer-events-none" />
-                <img src={feedback.image_url} alt="Attachment" className="max-h-64 w-full object-cover transition-transform duration-700 group-hover/image:scale-105" />
-            </div>
+        {feedback.attachment_urls && feedback.attachment_urls.length > 0 && (
+          <div className="mt-3">
+             <Dialog onOpenChange={(open) => !open && setCurrentImageIndex(0)}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="h-7 px-2.5 text-xs gap-1.5 font-medium bg-muted/30 hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <Paperclip className="h-3 w-3" />
+                    {feedback.attachment_urls.length} Attachment{feedback.attachment_urls.length !== 1 ? 's' : ''}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl w-full p-0 overflow-hidden bg-transparent border-none shadow-none focus:outline-none">
+                    <div className="relative w-full h-[85vh] flex items-center justify-center group/lightbox focus:outline-none">
+                      <img 
+                        src={feedback.attachment_urls[currentImageIndex]} 
+                        alt={`Attachment ${currentImageIndex + 1}`} 
+                        className="max-h-full max-w-full object-contain rounded-md shadow-2xl" 
+                      />
+                      
+                      {feedback.attachment_urls.length > 1 && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute left-2 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70 hover:text-white border-0 opacity-0 group-hover/lightbox:opacity-100 transition-opacity focus:outline-none"
+                            onClick={prevImage}
+                          >
+                            <ChevronLeft className="h-6 w-6" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70 hover:text-white border-0 opacity-0 group-hover/lightbox:opacity-100 transition-opacity focus:outline-none"
+                            onClick={nextImage}
+                          >
+                            <ChevronRight className="h-6 w-6" />
+                          </Button>
+                          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/50 text-white text-xs font-medium backdrop-blur-sm">
+                            {currentImageIndex + 1} / {feedback.attachment_urls.length}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                </DialogContent>
+              </Dialog>
+           </div>
         )}
       </CardContent>
 
-      <CardFooter className="pt-2 pb-4 flex justify-between items-center transition-opacity duration-300">
-         <span className="text-xs text-muted-foreground font-mono bg-muted/50 px-2 py-1 rounded-md border border-border/50">
-            ID: {feedback.id.substring(0, 8)}
+      <CardFooter className="px-4 py-3 flex justify-between items-center border-t border-border/30 bg-muted/5 mt-2">
+         <span className="text-[10px] text-muted-foreground/60 font-mono">
+            #{feedback.id.substring(0, 6)}
          </span>
-        <Button
-          size="sm"
-          onClick={toggleResolve}
-          disabled={isUpdating}
-          className={`
-            h-8 px-4 rounded-md text-xs font-semibold shadow-sm transition-all duration-300
-            ${feedback.resolved 
-                ? "bg-pink-600 hover:bg-pink-700 text-white shadow-pink-500/20" 
-                : "bg-pink-600 hover:bg-pink-700 text-white shadow-pink-500/20"
-            }
-          `}
-        >
-          {isUpdating ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
-          ) : feedback.resolved ? (
-            <>
-              <X className="mr-1.5 h-3.5 w-3.5" />
-              Re-open
-            </>
-          ) : (
-            <>
-              <Check className="mr-1.5 h-3.5 w-3.5" />
-              Resolve
-            </>
-          )}
-        </Button>
+         
+         <Button
+            size="sm"
+            variant={feedback.resolved ? "ghost" : "default"}
+            onClick={toggleResolve}
+            disabled={isUpdating}
+            className={`
+              h-7 px-3 text-xs font-medium rounded-md transition-all
+              ${feedback.resolved 
+                  ? "text-muted-foreground hover:text-foreground hover:bg-muted" 
+                  : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+              }
+            `}
+         >
+            {isUpdating ? (
+              <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
+            ) : feedback.resolved ? (
+              <>
+                <X className="mr-1.5 h-3 w-3" />
+                Re-open
+              </>
+            ) : (
+              <>
+                <Check className="mr-1.5 h-3 w-3" />
+                Resolve
+              </>
+            )}
+         </Button>
       </CardFooter>
     </Card>
   );
