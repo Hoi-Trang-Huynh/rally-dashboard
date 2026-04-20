@@ -6,9 +6,13 @@ import { getAllMCPTools, callMCPTool, mcpToolsToOpenAIFormat } from "@/lib/mcp-c
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+let _openai: OpenAI | null = null;
+function getOpenAI(): OpenAI {
+  if (!_openai) {
+    _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return _openai;
+}
 
 function buildSystemPrompt(userName: string, userEmail: string): string {
   return `You are Rall-E, the intelligent assistant for the Rally team dashboard. You have access to the team's Atlassian (Jira/Confluence) workspace through connected tools.
@@ -65,7 +69,7 @@ export async function POST(request: NextRequest) {
         let continueLoop = true;
         while (continueLoop) {
           // Accumulate streamed chunks
-          const streamResponse = await openai.chat.completions.create({
+          const streamResponse = await getOpenAI().chat.completions.create({
             model: MODEL,
             messages: openaiMessages,
             ...(tools.length > 0 ? { tools } : { reasoning_effort: "medium" as never }),
