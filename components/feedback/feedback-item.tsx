@@ -3,13 +3,14 @@
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Check, X, Loader2, Calendar, Paperclip, ChevronLeft, ChevronRight } from "lucide-react";
+import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { Feedback, FeedbackCategory } from "@/types/feedback";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { resolveFeedback } from "@/lib/api-feedback";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface FeedbackItemProps {
   feedback: Feedback;
@@ -42,15 +43,15 @@ export function FeedbackItem({ feedback, onUpdate }: FeedbackItemProps) {
 
   const nextImage = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (feedback.attachment_urls) {
-      setCurrentImageIndex((prev) => (prev + 1) % feedback.attachment_urls!.length);
+    if (feedback.attachmentUrls) {
+      setCurrentImageIndex((prev) => (prev + 1) % feedback.attachmentUrls!.length);
     }
   };
 
   const prevImage = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (feedback.attachment_urls) {
-      setCurrentImageIndex((prev) => (prev - 1 + feedback.attachment_urls!.length) % feedback.attachment_urls!.length);
+    if (feedback.attachmentUrls) {
+      setCurrentImageIndex((prev) => (prev - 1 + feedback.attachmentUrls!.length) % feedback.attachmentUrls!.length);
     }
   };
 
@@ -76,7 +77,7 @@ export function FeedbackItem({ feedback, onUpdate }: FeedbackItemProps) {
 
       <CardHeader className="flex flex-row gap-3 p-4 pb-2">
          <Avatar className="h-9 w-9 border border-border/50">
-            <AvatarImage src={feedback.avatar_url} alt={feedback.username} />
+            <AvatarImage src={feedback.avatarUrl} alt={feedback.username} />
             <AvatarFallback className="text-xs bg-muted text-muted-foreground font-medium">
                 {feedback.username.slice(0, 2).toUpperCase()}
             </AvatarFallback>
@@ -84,7 +85,14 @@ export function FeedbackItem({ feedback, onUpdate }: FeedbackItemProps) {
          <div className="flex flex-col gap-0.5">
             <h4 className="text-sm font-medium text-foreground leading-none">{feedback.username}</h4>
             <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-              <span>{formatDistanceToNow(new Date(feedback.created_at), { addSuffix: true })}</span>
+              <span>
+                {(() => {
+                  const date = feedback.createdAt ? new Date(feedback.createdAt) : null;
+                  return date && !isNaN(date.getTime())
+                    ? formatDistanceToNow(date, { addSuffix: true })
+                    : "Unknown date";
+                })()}
+              </span>
             </div>
          </div>
       </CardHeader>
@@ -94,7 +102,7 @@ export function FeedbackItem({ feedback, onUpdate }: FeedbackItemProps) {
            {feedback.comment}
         </p>
         
-        {feedback.attachment_urls && feedback.attachment_urls.length > 0 && (
+        {feedback.attachmentUrls && feedback.attachmentUrls.length > 0 && (
           <div className="mt-3">
              <Dialog onOpenChange={(open) => !open && setCurrentImageIndex(0)}>
                 <DialogTrigger asChild>
@@ -104,18 +112,21 @@ export function FeedbackItem({ feedback, onUpdate }: FeedbackItemProps) {
                     className="h-7 px-2.5 text-xs gap-1.5 font-medium bg-muted/30 hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <Paperclip className="h-3 w-3" />
-                    {feedback.attachment_urls.length} Attachment{feedback.attachment_urls.length !== 1 ? 's' : ''}
+                    {feedback.attachmentUrls.length} Attachment{feedback.attachmentUrls.length !== 1 ? 's' : ''}
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-4xl w-full p-0 overflow-hidden bg-transparent border-none shadow-none focus:outline-none">
+                    <VisuallyHidden.Root>
+                      <DialogTitle>Attachment preview</DialogTitle>
+                    </VisuallyHidden.Root>
                     <div className="relative w-full h-[85vh] flex items-center justify-center group/lightbox focus:outline-none">
                       <img 
-                        src={feedback.attachment_urls[currentImageIndex]} 
+                        src={feedback.attachmentUrls[currentImageIndex]} 
                         alt={`Attachment ${currentImageIndex + 1}`} 
                         className="max-h-full max-w-full object-contain rounded-md shadow-2xl" 
                       />
                       
-                      {feedback.attachment_urls.length > 1 && (
+                      {feedback.attachmentUrls.length > 1 && (
                         <>
                           <Button
                             variant="ghost"
@@ -134,7 +145,7 @@ export function FeedbackItem({ feedback, onUpdate }: FeedbackItemProps) {
                             <ChevronRight className="h-6 w-6" />
                           </Button>
                           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/50 text-white text-xs font-medium backdrop-blur-sm">
-                            {currentImageIndex + 1} / {feedback.attachment_urls.length}
+                            {currentImageIndex + 1} / {feedback.attachmentUrls.length}
                           </div>
                         </>
                       )}

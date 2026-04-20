@@ -113,25 +113,31 @@ export async function callMCPTool(
 }
 
 /**
- * Convert MCP tools into Anthropic-compatible tool definitions
+ * Convert MCP tools into OpenAI-compatible tool definitions
  * and build a map from tool name → server name.
  */
-export function mcpToolsToAnthropicFormat(
+export function mcpToolsToOpenAIFormat(
   mcpTools: { serverName: string; tools: MCPTool[] }[],
 ) {
   const tools: {
-    name: string;
-    description: string;
-    input_schema: Record<string, unknown>;
+    type: "function";
+    function: {
+      name: string;
+      description: string;
+      parameters: Record<string, unknown>;
+    };
   }[] = [];
   const toolServerMap = new Map<string, string>();
 
   for (const { serverName, tools: serverTools } of mcpTools) {
     for (const tool of serverTools) {
       tools.push({
-        name: tool.name,
-        description: tool.description || "",
-        input_schema: tool.inputSchema || { type: "object", properties: {} },
+        type: "function",
+        function: {
+          name: tool.name,
+          description: tool.description || "",
+          parameters: tool.inputSchema || { type: "object", properties: {} },
+        },
       });
       toolServerMap.set(tool.name, serverName);
     }

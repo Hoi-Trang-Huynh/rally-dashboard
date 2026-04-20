@@ -30,7 +30,7 @@ export interface ChatSession {
     email: string;
     image?: string;
   };
-  model: "sonnet" | "opus";
+  model?: string;
   createdAt: string;
   updatedAt: string;
 }

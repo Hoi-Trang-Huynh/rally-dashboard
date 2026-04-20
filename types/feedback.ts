@@ -10,27 +10,27 @@ export interface Feedback {
   id: string;
   username: string;
   comment: string;
-  avatar_url?: string;
-  attachment_urls?: string[];
+  avatarUrl?: string;
+  attachmentUrls?: string[];
   categories?: FeedbackCategory[];
   resolved: boolean;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface FeedbackListResponse {
   feedbacks: Feedback[];
   page: number;
-  page_size: number;
+  pageSize: number;
   total: number;
-  total_pages: number;
+  totalPages: number;
 }
 
 export interface CreateFeedbackRequest {
   username: string;
   comment: string;
-  avatar_url?: string;
-  attachment_urls?: string[]; // Optional image attachment
+  avatarUrl?: string;
+  attachmentUrls?: string[];
   categories?: FeedbackCategory[];
 }
 

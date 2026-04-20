@@ -5,7 +5,7 @@ import { Feedback, FeedbackListResponse, CreateFeedbackRequest, FeedbackCategory
 export async function getFeedbacks(page = 1, pageSize = 20, username?: string, categories?: FeedbackCategory[]): Promise<FeedbackListResponse> {
   const params = new URLSearchParams({
     page: page.toString(),
-    page_size: pageSize.toString(),
+    pageSize: pageSize.toString(),
   });
   
   if (username) params.append("username", username);

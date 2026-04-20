@@ -33,7 +33,7 @@ export function FeedbackList({ currentUser }: FeedbackListProps) {
       // But let's assume 'username' param can be used for filtering by user.
       const data = await getFeedbacks(page, 20, search || undefined, categories);
       setFeedbacks(data.feedbacks || []);
-      setTotalPages(data.total_pages);
+      setTotalPages(data.totalPages);
       setTotalItems(data.total);
     } catch (error) {
       console.error("Failed to fetch feedbacks", error);

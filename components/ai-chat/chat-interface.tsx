@@ -202,7 +202,7 @@ export function ChatInterface() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [model, setModel] = useState<"sonnet" | "opus">("sonnet");
+
   const [servers, setServers] = useState<ServerState[]>(DEFAULT_SERVERS);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -252,14 +252,14 @@ export function ChatInterface() {
         await fetch(`/api/ai-chat/sessions/${sessionId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages, title, model }),
+          body: JSON.stringify({ messages, title }),
         });
       } else {
         // Create new session
         const res = await fetch("/api/ai-chat/sessions", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages, title, model }),
+          body: JSON.stringify({ messages, title }),
         });
         if (res.ok) {
           const data = await res.json();
@@ -276,7 +276,7 @@ export function ChatInterface() {
       if (res.ok) {
         const data = await res.json();
         setMessages(data.messages || []);
-        setModel(data.model || "sonnet");
+
         setSessionId(data._id);
         setShowSessions(false);
       }
@@ -354,7 +354,7 @@ export function ChatInterface() {
         const response = await fetch("/api/ai-chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: history, model }),
+          body: JSON.stringify({ messages: history }),
         });
 
         if (!response.ok) {
@@ -409,7 +409,7 @@ export function ChatInterface() {
         setIsLoading(false);
       }
     },
-    [input, isLoading, messages, model],
+    [input, isLoading, messages],
   );
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -461,29 +461,7 @@ export function ChatInterface() {
               <Plus className="h-4 w-4 text-muted-foreground" />
             </button>
 
-            {/* Model picker */}
-            <div className="flex items-center rounded-lg border border-white/30 dark:border-white/10 bg-white/40 dark:bg-white/5 p-0.5">
-              <button
-                onClick={() => setModel("sonnet")}
-                className={`rounded-md px-3 py-1 text-xs font-medium transition-all ${
-                  model === "sonnet"
-                    ? "bg-white dark:bg-white/15 text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Sonnet
-              </button>
-              <button
-                onClick={() => setModel("opus")}
-                className={`rounded-md px-3 py-1 text-xs font-medium transition-all ${
-                  model === "opus"
-                    ? "bg-white dark:bg-white/15 text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Opus
-              </button>
-            </div>
+
           </div>
         </div>
 
@@ -505,10 +483,13 @@ export function ChatInterface() {
             ) : (
               <div className="flex flex-col gap-1.5">
                 {pastSessions.map((s) => (
-                  <button
+                  <div
                     key={s._id}
                     onClick={() => loadSession(s._id!)}
-                    className={`group flex items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors ${
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === "Enter" && loadSession(s._id!)}
+                    className={`group flex items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors cursor-pointer ${
                       sessionId === s._id
                         ? "bg-pink-500/10 border border-pink-500/20"
                         : "hover:bg-muted/50 border border-transparent"
@@ -535,7 +516,7 @@ export function ChatInterface() {
                     >
                       <Trash2 className="h-3.5 w-3.5 text-red-500" />
                     </button>
-                  </button>
+                  </div>
                 ))}
               </div>
             )}

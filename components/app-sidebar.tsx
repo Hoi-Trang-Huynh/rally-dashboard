@@ -6,7 +6,6 @@ import {
   Link as LinkIcon,
   Activity,
   CheckSquare,
-  CalendarDays,
   LogOut,
   User as UserIcon,
   Search,
@@ -14,7 +13,6 @@ import {
   Briefcase,
   Users,
   MessageSquare,
-  Smartphone,
   Sparkles,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
@@ -175,28 +173,6 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                 <Briefcase className="h-6 w-6" />
                 <span>Manager</span>
               </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-
-          {/* Disabled / Coming Soon */}
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Calendar (Coming Soon)"
-              disabled
-              className={`${menuItemClass} opacity-40 pointer-events-none`}
-            >
-              <CalendarDays className="h-6 w-6" />
-              <span>Calendar</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Live Testing (Coming Soon)"
-              disabled
-              className={`${menuItemClass} opacity-40 pointer-events-none`}
-            >
-              <Smartphone className="h-6 w-6" />
-              <span>Live Testing</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

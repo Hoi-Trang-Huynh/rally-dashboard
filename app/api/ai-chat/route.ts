@@ -1,21 +1,17 @@
 import { NextRequest } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { auth } from "@/lib/auth";
-import {
-  getAllMCPTools,
-  callMCPTool,
-  mcpToolsToAnthropicFormat,
-} from "@/lib/mcp-client";
+import { getAllMCPTools, callMCPTool, mcpToolsToOpenAIFormat } from "@/lib/mcp-client";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 function buildSystemPrompt(userName: string, userEmail: string): string {
-  return `You are Rally AI, the intelligent assistant for the Rally team dashboard. You have access to the team's Atlassian (Jira/Confluence) workspace through connected tools.
+  return `You are Rall-E, the intelligent assistant for the Rally team dashboard. You have access to the team's Atlassian (Jira/Confluence) workspace through connected tools.
 
 You help the team by:
 - Checking Jira tickets, sprint status, and project progress
@@ -27,52 +23,7 @@ The current user is ${userName} (${userEmail}).
 Be concise, helpful, and specific. When referencing designs or tickets, include relevant details. Format responses with markdown when helpful.`;
 }
 
-async function executeToolCalls(
-  blocks: Anthropic.ContentBlock[],
-  toolServerMap: Map<string, string>,
-  send: (data: Record<string, unknown>) => void,
-): Promise<Anthropic.ToolResultBlockParam[]> {
-  const results: Anthropic.ToolResultBlockParam[] = [];
-
-  for (const block of blocks) {
-    if (block.type !== "tool_use") continue;
-
-    const serverName = toolServerMap.get(block.name) || "unknown";
-    send({ type: "tool_call", name: block.name, server: serverName, status: "calling" });
-
-    try {
-      const result = await callMCPTool(
-        serverName,
-        block.name,
-        block.input as Record<string, unknown>,
-      );
-
-      results.push({
-        type: "tool_result",
-        tool_use_id: block.id,
-        content:
-          typeof result.content === "string"
-            ? result.content
-            : JSON.stringify(result.content),
-      });
-
-      send({ type: "tool_result", name: block.name, server: serverName, status: "done" });
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-
-      results.push({
-        type: "tool_result",
-        tool_use_id: block.id,
-        content: `Error: ${message}`,
-        is_error: true,
-      });
-
-      send({ type: "tool_error", name: block.name, error: message });
-    }
-  }
-
-  return results;
-}
+const MODEL = "gpt-5.4-nano";
 
 export async function POST(request: NextRequest) {
   const session = await auth();
@@ -80,16 +31,9 @@ export async function POST(request: NextRequest) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
   }
 
-  const { messages, model } = (await request.json()) as {
+  const { messages } = (await request.json()) as {
     messages: { role: "user" | "assistant"; content: string }[];
-    model?: "sonnet" | "opus";
   };
-
-  const MODELS: Record<string, Anthropic.Messages.Model> = {
-    sonnet: "claude-sonnet-4-6",
-    opus: "claude-opus-4-6",
-  };
-  const resolvedModel = MODELS[model || "sonnet"];
 
   const encoder = new TextEncoder();
 
@@ -101,7 +45,7 @@ export async function POST(request: NextRequest) {
 
       try {
         const mcpTools = await getAllMCPTools();
-        const { tools, toolServerMap } = mcpToolsToAnthropicFormat(mcpTools);
+        const { tools, toolServerMap } = mcpToolsToOpenAIFormat(mcpTools);
 
         send({ type: "servers", servers: mcpTools.map((s) => s.serverName) });
 
@@ -110,40 +54,93 @@ export async function POST(request: NextRequest) {
           session.user?.email || "",
         );
 
-        let anthropicMessages: Anthropic.MessageParam[] = messages.map((m) => ({
-          role: m.role,
-          content: m.content,
-        }));
+        type OpenAIMessage = OpenAI.Chat.ChatCompletionMessageParam;
+
+        let openaiMessages: OpenAIMessage[] = [
+          { role: "system", content: systemPrompt },
+          ...messages.map((m) => ({ role: m.role, content: m.content } as OpenAIMessage)),
+        ];
 
         // Agentic tool-use loop
         let continueLoop = true;
         while (continueLoop) {
-          const response = anthropic.messages.stream({
-            model: resolvedModel,
-            max_tokens: 4096,
-            system: systemPrompt,
-            messages: anthropicMessages,
-            ...(tools.length > 0 ? { tools: tools as Anthropic.Tool[] } : {}),
+          // Accumulate streamed chunks
+          const streamResponse = await openai.chat.completions.create({
+            model: MODEL,
+            messages: openaiMessages,
+            ...(tools.length > 0 ? { tools } : { reasoning_effort: "medium" as never }),
+            max_completion_tokens: 4096,
+            stream: true,
           });
 
-          response.on("text", (text) => {
-            send({ type: "text_delta", content: text });
-          });
+          let assistantContent = "";
+          const toolCallsAcc: Record<
+            number,
+            { id: string; name: string; argumentsRaw: string }
+          > = {};
+          let finishReason: string | null = null;
 
-          const finalMessage = await response.finalMessage();
+          for await (const chunk of streamResponse) {
+            const delta = chunk.choices[0]?.delta;
+            finishReason = chunk.choices[0]?.finish_reason ?? finishReason;
 
-          if (finalMessage.stop_reason === "tool_use") {
-            const toolResults = await executeToolCalls(
-              finalMessage.content,
-              toolServerMap,
-              send,
-            );
+            if (delta?.content) {
+              assistantContent += delta.content;
+              send({ type: "text_delta", content: delta.content });
+            }
 
-            anthropicMessages = [
-              ...anthropicMessages,
-              { role: "assistant", content: finalMessage.content },
-              { role: "user", content: toolResults },
-            ];
+            if (delta?.tool_calls) {
+              for (const tc of delta.tool_calls) {
+                if (!toolCallsAcc[tc.index]) {
+                  toolCallsAcc[tc.index] = { id: "", name: "", argumentsRaw: "" };
+                }
+                if (tc.id) toolCallsAcc[tc.index].id = tc.id;
+                if (tc.function?.name) toolCallsAcc[tc.index].name += tc.function.name;
+                if (tc.function?.arguments) toolCallsAcc[tc.index].argumentsRaw += tc.function.arguments;
+              }
+            }
+          }
+
+          const resolvedToolCalls = Object.values(toolCallsAcc);
+
+          if (finishReason === "tool_calls" && resolvedToolCalls.length > 0) {
+            // Append assistant message with tool_calls
+            openaiMessages.push({
+              role: "assistant",
+              content: assistantContent || null,
+              tool_calls: resolvedToolCalls.map((tc) => ({
+                id: tc.id,
+                type: "function" as const,
+                function: { name: tc.name, arguments: tc.argumentsRaw },
+              })),
+            });
+
+            // Execute each tool call and collect results
+            for (const tc of resolvedToolCalls) {
+              const serverName = toolServerMap.get(tc.name) || "unknown";
+              send({ type: "tool_call", name: tc.name, server: serverName, status: "calling" });
+
+              let resultContent: string;
+              try {
+                const args = JSON.parse(tc.argumentsRaw || "{}") as Record<string, unknown>;
+                const result = await callMCPTool(serverName, tc.name, args);
+                resultContent =
+                  typeof result.content === "string"
+                    ? result.content
+                    : JSON.stringify(result.content);
+                send({ type: "tool_result", name: tc.name, server: serverName, status: "done" });
+              } catch (err: unknown) {
+                const message = err instanceof Error ? err.message : "Unknown error";
+                resultContent = `Error: ${message}`;
+                send({ type: "tool_error", name: tc.name, error: message });
+              }
+
+              openaiMessages.push({
+                role: "tool",
+                tool_call_id: tc.id,
+                content: resultContent,
+              });
+            }
           } else {
             continueLoop = false;
           }

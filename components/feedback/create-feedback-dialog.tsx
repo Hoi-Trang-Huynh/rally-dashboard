@@ -56,7 +56,7 @@ export function CreateFeedbackDialog({ currentUser, onSuccess }: CreateFeedbackD
       await createFeedback({
         username: currentUser?.name || "Anonymous",
         comment: comment,
-        avatar_url: currentUser?.image || undefined,
+        avatarUrl: currentUser?.image || undefined,
         categories: categories,
       });
       setOpen(false);

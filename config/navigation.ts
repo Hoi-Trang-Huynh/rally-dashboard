@@ -11,6 +11,8 @@ import {
   HardDrive,
   Server,
   Globe,
+  Shield,
+  Image,
   type LucideIcon,
 } from "lucide-react";
 
@@ -41,6 +43,8 @@ export const iconMap: Record<string, LucideIcon> = {
   HardDrive,
   Server,
   Globe,
+  Shield,
+  Image,
 };
 
 export const navigationConfig: LinkCategory[] = [
@@ -97,22 +101,58 @@ export const navigationConfig: LinkCategory[] = [
     description: "Infrastructure management",
     links: [
       {
-        title: "Backend API",
-        description: "Development Environment",
-        url: "https://api.rally-go.com/",
-        iconName: "Server",
+        title: "Google Cloud Run",
+        description: "Backend services hosting",
+        url: "https://console.cloud.google.com/run",
+        iconName: "Cloud",
+      },
+      {
+        title: "Cloudflare",
+        description: "DNS & CDN management",
+        url: "https://dash.cloudflare.com/6737fbba39245953e5c6b491776b4eed/rally-go.com",
+        iconName: "Shield",
+      },
+      {
+        title: "MongoDB Atlas",
+        description: "Database cluster",
+        url: "https://cloud.mongodb.com/v2/68b847951c0b306f9afedeee#/overview",
+        iconName: "Database",
+      },
+      {
+        title: "Firebase",
+        description: "Auth & backend services",
+        url: "https://console.firebase.google.com/u/1/project/rally-go-6/overview?pli=1",
+        iconName: "Flame",
+      },
+      {
+        title: "Cloudinary",
+        description: "Media storage & delivery",
+        url: "https://console.cloudinary.com/app/c-52a532852992713b0c645b4f162485/home/dashboard",
+        iconName: "Image",
       },
       {
         title: "Build Artifacts (OneDrive)",
-        description: "Frontend Builds",
+        description: "Frontend builds",
         url: "https://rally294-my.sharepoint.com/shared?id=%2Fsites%2FRally%2FShared%20Documents%2FFrontend%2FBuilds&listurl=https%3A%2F%2Frally294%2Esharepoint%2Ecom%2Fsites%2FRally%2FShared%20Documents",
         iconName: "HardDrive",
       },
+    ],
+  },
+  {
+    title: "CI/CD & Source Control",
+    description: "Build pipelines and repositories",
+    links: [
       {
-        title: "Google Cloud Run",
-        description: "Backend services",
-        url: "https://console.cloud.google.com/run",
-        iconName: "Cloud",
+        title: "GitHub",
+        description: "Source code repositories",
+        url: "https://github.com/Hoi-Trang-Huynh",
+        iconName: "Github",
+      },
+      {
+        title: "Codemagic",
+        description: "CI/CD for Flutter",
+        url: "https://codemagic.io/builds?app_id=68b8665fe6fd5d559045c22d",
+        iconName: "Smartphone",
       },
     ],
   },
