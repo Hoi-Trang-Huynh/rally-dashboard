@@ -15,6 +15,7 @@ import {
   Users,
   MessageSquare,
   Smartphone,
+  Sparkles,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
@@ -99,9 +100,9 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton 
-              asChild 
-              tooltip="Team" 
+            <SidebarMenuButton
+              asChild
+              tooltip="Team"
               isActive={pathname === "/team"}
               className={menuItemClass}
             >
@@ -112,22 +113,22 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton 
-              asChild 
-              tooltip="Build Monitor" 
-              isActive={pathname === "/build-monitor"}
+            <SidebarMenuButton
+              asChild
+              tooltip="Rall-E"
+              isActive={pathname === "/ai-chat"}
               className={menuItemClass}
             >
-              <Link href="/build-monitor">
-                <Activity className="h-6 w-6" />
-                <span>Build Monitor</span>
+              <Link href="/ai-chat">
+                <Sparkles className="h-6 w-6" />
+                <span>Rall-E</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton 
-              asChild 
-              tooltip="Jira Feeds" 
+            <SidebarMenuButton
+              asChild
+              tooltip="Jira Feeds"
               isActive={pathname === "/jira-feeds"}
               className={menuItemClass}
             >
@@ -138,22 +139,22 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton 
-              asChild 
-              tooltip="Calendar" 
-              isActive={pathname === "/calendar"}
+            <SidebarMenuButton
+              asChild
+              tooltip="Build Monitor"
+              isActive={pathname === "/build-monitor"}
               className={menuItemClass}
             >
-              <Link href="/calendar">
-                <CalendarDays className="h-6 w-6" />
-                <span>Calendar</span>
+              <Link href="/build-monitor">
+                <Activity className="h-6 w-6" />
+                <span>Build Monitor</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton 
-              asChild 
-              tooltip="Feedback" 
+            <SidebarMenuButton
+              asChild
+              tooltip="Feedback"
               isActive={pathname === "/feedback"}
               className={menuItemClass}
             >
@@ -164,22 +165,9 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton 
-              asChild 
-              tooltip="Live Testing (Coming Soon)" 
-              isActive={pathname === "/live-testing"}
-              className={menuItemClass}
-            >
-              <Link href="/live-testing" className="relative">
-                <Smartphone className="h-6 w-6" />
-                <span>Live Testing</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton 
-              asChild 
-              tooltip="Manager" 
+            <SidebarMenuButton
+              asChild
+              tooltip="Manager"
               isActive={pathname === "/manager"}
               className={menuItemClass}
             >
@@ -187,6 +175,28 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                 <Briefcase className="h-6 w-6" />
                 <span>Manager</span>
               </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+
+          {/* Disabled / Coming Soon */}
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Calendar (Coming Soon)"
+              disabled
+              className={`${menuItemClass} opacity-40 pointer-events-none`}
+            >
+              <CalendarDays className="h-6 w-6" />
+              <span>Calendar</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Live Testing (Coming Soon)"
+              disabled
+              className={`${menuItemClass} opacity-40 pointer-events-none`}
+            >
+              <Smartphone className="h-6 w-6" />
+              <span>Live Testing</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

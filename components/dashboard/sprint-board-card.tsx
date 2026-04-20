@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, Timer } from "lucide-react";
 
 interface SprintData {
   name: string;
   goal: string;
   daysLeft: number;
-  progress: number; // 0-100
+  progress: number;
   total: number;
   completed: number;
   status: string;
@@ -21,7 +21,12 @@ interface SprintBoardCardProps {
   gradientTo: string;
 }
 
-export function SprintBoardCard({ title, type, gradientFrom, gradientTo }: SprintBoardCardProps) {
+export function SprintBoardCard({
+  title,
+  type,
+  gradientFrom,
+  gradientTo,
+}: SprintBoardCardProps) {
   const [data, setData] = useState<SprintData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -33,29 +38,31 @@ export function SprintBoardCard({ title, type, gradientFrom, gradientTo }: Sprin
         const json = await res.json();
         setData(json);
       } catch {
-        setData({ 
-          name: "Error loading", 
-          goal: "", 
-          daysLeft: 0, 
-          progress: 0, 
-          total: 0, 
-          completed: 0, 
+        setData({
+          name: "Error loading",
+          goal: "",
+          daysLeft: 0,
+          progress: 0,
+          total: 0,
+          completed: 0,
           status: "Error",
-          error: "Check credentials"
+          error: "Check credentials",
         });
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchData();
   }, [type]);
 
   if (loading) {
     return (
-      <div className="p-8 rounded-2xl bg-card border border-border shadow-sm flex flex-col gap-4 min-h-[200px] justify-center items-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        <span className="text-muted-foreground text-sm">Syncing with Jira...</span>
+      <div className="rounded-2xl border border-border/50 bg-card p-6 flex flex-col items-center justify-center min-h-[160px]">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <span className="text-xs text-muted-foreground mt-2">
+          Syncing with Jira...
+        </span>
       </div>
     );
   }
@@ -63,32 +70,57 @@ export function SprintBoardCard({ title, type, gradientFrom, gradientTo }: Sprin
   const isError = data?.error;
 
   return (
-    <div className="p-8 rounded-2xl bg-card border border-border shadow-sm flex flex-col gap-4 transition-all hover:shadow-xl hover:-translate-y-1 group">
-       <h3 className="text-base font-semibold text-muted-foreground uppercase tracking-wider flex justify-between items-center">
-         {title}
-         {isError && <AlertCircle className="h-4 w-4 text-red-500" />}
-       </h3>
-       
-       <div className="text-3xl font-bold text-foreground truncate">
-         {data?.name || "No Active Sprint"}
-       </div>
-       
-       {/* Progress Bar */}
-       <div className="w-full bg-muted rounded-full h-2.5 mt-2 overflow-hidden">
-         <div 
-            className={`h-2.5 rounded-full transition-all duration-1000 bg-gradient-to-r ${gradientFrom} ${gradientTo}`} 
-            style={{ width: `${data?.progress || 0}%` }}
-         />
-       </div>
-       
-       <div className="flex justify-between items-center text-sm font-medium">
-          <span className="text-muted-foreground">
-             {data?.completed}/{data?.total} Issues
+    <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-card p-6 transition-all hover:shadow-lg">
+      {/* Decorative gradient blob */}
+      <div
+        className={`absolute top-0 right-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-gradient-to-br ${gradientFrom} ${gradientTo} opacity-10 blur-2xl`}
+      />
+
+      <div className="relative">
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            {title}
           </span>
-          <span className={`${data && data.daysLeft <= 2 ? "text-red-500" : "text-muted-foreground"}`}>
-             {isError ? "Configuration Required" : `${data?.daysLeft} days left`}
-          </span>
-       </div>
+          {isError ? (
+            <AlertCircle className="h-4 w-4 text-red-500" />
+          ) : (
+            <div
+              className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+                data && data.daysLeft <= 2
+                  ? "bg-red-500/10 text-red-500"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              <Timer className="h-3 w-3" />
+              {isError
+                ? "Error"
+                : `${data?.daysLeft}d left`}
+            </div>
+          )}
+        </div>
+
+        <p className="text-xl font-bold text-foreground truncate mb-4">
+          {data?.name || "No Active Sprint"}
+        </p>
+
+        {/* Progress */}
+        <div className="space-y-2">
+          <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+            <div
+              className={`h-2 rounded-full transition-all duration-1000 bg-gradient-to-r ${gradientFrom} ${gradientTo}`}
+              style={{ width: `${data?.progress || 0}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-xs font-medium text-muted-foreground">
+            <span>
+              {data?.completed}/{data?.total} issues
+            </span>
+            <span className="font-semibold text-foreground">
+              {data?.progress || 0}%
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

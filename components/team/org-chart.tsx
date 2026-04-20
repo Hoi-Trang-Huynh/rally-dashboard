@@ -2,8 +2,6 @@
 
 import { useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 
 interface User {
@@ -138,7 +136,7 @@ function TreeNodeRenderer({ node }: { node: TreeNode }) {
             {hasChildren && (
                 <>
                     {/* Vertical Line Down from Parent */}
-                    <div className="h-8 w-px bg-border"></div>
+                    <div className="h-8 w-px bg-border/50"></div>
 
                     {/* Children Container */}
                     <div className="flex justify-center relative">
@@ -153,12 +151,12 @@ function TreeNodeRenderer({ node }: { node: TreeNode }) {
                                     {!isOnly && (
                                         <>
                                             {/* Line to the Right (for first & middle) */}
-                                            <div className={`absolute top-0 right-0 h-px bg-border ${isLast ? 'w-1/2' : 'w-full'} ${isFirst ? 'left-1/2' : 'left-0'}`}></div>
+                                            <div className={`absolute top-0 right-0 h-px bg-border/50 ${isLast ? 'w-1/2' : 'w-full'} ${isFirst ? 'left-1/2' : 'left-0'}`}></div>
                                         </>
                                     )}
 
                                     {/* Vertical Line Up to the Horizontal Bus */}
-                                    <div className="h-8 w-px bg-border"></div>
+                                    <div className="h-8 w-px bg-border/50"></div>
 
                                     {/* The Child Node Itself */}
                                     <TreeNodeRenderer node={child} />
@@ -173,7 +171,6 @@ function TreeNodeRenderer({ node }: { node: TreeNode }) {
 }
 
 function NodeContent({ user }: { user: User }) {
-    // Generate initials
     const initials = user.name
         .split(" ")
         .map((n) => n[0])
@@ -188,26 +185,22 @@ function NodeContent({ user }: { user: User }) {
             transition={{ duration: 0.3 }}
             className="z-10"
         >
-            <Card className="w-64 h-52 border-muted-foreground/20 shadow-sm hover:shadow-md transition-shadow bg-card flex flex-col">
-                <CardContent className="p-4 flex flex-col items-center text-center gap-2 flex-1 justify-center">
-                    <div className="flex flex-col items-center gap-2 w-full">
-                        <Avatar className="h-14 w-14 border-2 border-primary/10">
-                            <AvatarImage src={`/api/users/${user.id}/avatar`} />
-                            <AvatarFallback className="bg-primary/5 text-primary text-lg">
-                                {initials}
-                            </AvatarFallback>
-                        </Avatar>
-                        
-                        <div className="space-y-1 w-full">
-                            <h3 className="font-semibold text-base leading-tight truncate px-2" title={user.name}>{user.name}</h3>
-                            <div className="text-xs text-muted-foreground font-medium line-clamp-3 h-[3.5em] flex items-center justify-center" title={user.jobTitle || "Team Member"}>
-                                {user.jobTitle || "Team Member"}
-                            </div>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+            <div className="w-56 rounded-2xl border border-white/40 dark:border-white/10 bg-white/60 dark:bg-zinc-900/60 backdrop-blur-xl shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all p-5 flex flex-col items-center text-center gap-3">
+                <Avatar className="h-14 w-14 border-2 border-white/50 dark:border-white/10 shadow-md">
+                    <AvatarImage src={`/api/users/${user.id}/avatar`} />
+                    <AvatarFallback className="bg-linear-to-br from-pink-500 to-orange-500 text-white text-lg font-bold">
+                        {initials}
+                    </AvatarFallback>
+                </Avatar>
+                <div className="space-y-1 w-full">
+                    <h3 className="font-semibold text-sm leading-tight truncate" title={user.name}>
+                        {user.name}
+                    </h3>
+                    <p className="text-[11px] text-muted-foreground font-medium line-clamp-2" title={user.jobTitle || "Team Member"}>
+                        {user.jobTitle || "Team Member"}
+                    </p>
+                </div>
+            </div>
         </motion.div>
-
     );
 }
